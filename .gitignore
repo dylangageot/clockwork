@@ -6,6 +6,8 @@
 *.gise
 *.bit
 *.wdb
+*.vdbl
+*.vdbx
 *.xmsgs
 *.bld
 *.cmd_log

@@ -21,16 +21,16 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity PC is
+entity program_counter is
     Port ( clk : in  STD_LOGIC;
            ce : in  STD_LOGIC;
            rst : in  STD_LOGIC;
 			  ci : in STD_LOGIC;
 			  input : in  STD_LOGIC_VECTOR (31 downto 0);
            output : out  STD_LOGIC_VECTOR (31 downto 0));
-end PC;
+end program_counter;
 
-architecture Behavioral of PC is
+architecture Behavioral of program_counter is
 
 	signal pc_counter: UNSIGNED(31 downto 0) := (others => '0');
 

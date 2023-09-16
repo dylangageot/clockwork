@@ -32,14 +32,14 @@ USE ieee.numeric_std.ALL;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
  
-ENTITY testbench_PC IS
-END testbench_PC;
+ENTITY testbench_program_counter IS
+END testbench_program_counter;
  
-ARCHITECTURE behavior OF testbench_PC IS 
+ARCHITECTURE behavior OF testbench_program_counter IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
-    COMPONENT PC
+    COMPONENT program_counter
     PORT(
          clk : IN  std_logic;
          ce : IN  std_logic;
@@ -67,7 +67,7 @@ ARCHITECTURE behavior OF testbench_PC IS
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
-   uut: PC PORT MAP (
+   uut: program_counter PORT MAP (
           clk => clk,
           ce => ce,
           rst => rst,
