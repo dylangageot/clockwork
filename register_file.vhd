@@ -19,10 +19,7 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx primitives in this code.
@@ -35,6 +32,7 @@ entity register_file is
            rs1 : in  STD_LOGIC_VECTOR (4 downto 0);
            rs2 : in  STD_LOGIC_VECTOR (4 downto 0);
            rd : in  STD_LOGIC_VECTOR (4 downto 0);
+           id : in  STD_LOGIC_VECTOR (31 downto 0);
            os1 : out  STD_LOGIC_VECTOR (31 downto 0);
            os2 : out  STD_LOGIC_VECTOR (31 downto 0));
 end register_file;
@@ -46,8 +44,18 @@ architecture Behavioral of register_file is
 
 begin
 
-
-
+	os1 <= register_file(to_integer(unsigned(rs1)));
+	os2 <= register_file(to_integer(unsigned(rs2)));
+	
+	write_into_destination_register : process (clk, wr)
+	begin
+		if rising_edge(clk) and wr = '1' then
+			--! only write into register file if destination register is not x0.
+			if rd /= B"00000" then
+				register_file(to_integer(unsigned(rd))) <= id;
+			end if;
+		end if;
+	end process;
 
 end Behavioral;
 
