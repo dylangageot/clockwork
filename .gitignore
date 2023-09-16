@@ -1,0 +1,10 @@
+*.cmd_log
+*.lso
+*.ngc
+*.ngr
+*.stx
+*.syr
+*.html
+*.xrpt
+*.xml
+_xmsgs/
