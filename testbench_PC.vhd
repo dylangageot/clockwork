@@ -99,7 +99,7 @@ BEGIN
 			assert output = std_logic_vector(to_unsigned(i * 4, output'length)) report "PC does not count correctly" severity failure;
 			wait for clk_period;
 		end loop;
-		--! check that input is taken if ci is set
+		--! check that input is taken if ci is set.
 		ci <= '1';
 		input <= X"AAAA_AAA6";
       wait for clk_period*1;
