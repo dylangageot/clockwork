@@ -12,6 +12,8 @@ use IEEE.STD_LOGIC_1164.all;
 
 package control_field is
 
+type byte_length_t is (none, word, half, byte);
+
 type control_field_t is record
 		pc_enable : std_logic;
 		pc_write_input : std_logic;
@@ -19,6 +21,7 @@ type control_field_t is record
 		alu_arithmetic : std_logic;
 		alu_immd : std_logic;
 		rf_write_input : std_logic;
+		dc_write_input : byte_length_t;
 end record;
 
 -- type <new_type> is

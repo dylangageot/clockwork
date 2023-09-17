@@ -74,10 +74,7 @@ architecture Behavioral of cpu is
 	component instruction_cache is
 	  port (
 		 clka : IN STD_LOGIC;
-		 ena : IN STD_LOGIC;
-		 wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
 		 addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	  );
 	end component;
@@ -95,8 +92,12 @@ architecture Behavioral of cpu is
 	
 	--! signals
 	signal control_field : control_field_t;
+	signal dc_wea : std_logic_vector(3 downto 0);
 	signal ars_1, ars_2, ard : std_logic_vector(4 downto 0);
-	signal pc_output, pc_input, rf_input, rs_1, rs_2, immd, alu_port_2, alu_output : std_logic_vector(31 downto 0);
+	signal pc_output, pc_input, instruction,
+			 rf_input, rs_1, rs_2, immd, alu_port_2, 
+			 alu_output, dc_output 
+			 : std_logic_vector(31 downto 0);
 	
 begin
 
@@ -132,6 +133,27 @@ begin
 		input_1 => rs_1,
 		input_2 => alu_port_2,
 		output => alu_output
+	);
+	
+	--! instruction cache
+	ic1: instruction_cache port map (
+		clka => clk,
+		addra => pc_output,
+		douta => instruction
+	);
+
+	--! data cache
+	with control_field.dc_write_input select dc_wea <=
+		"1111" when word,
+		"0011" when half,
+		"0001" when byte,
+		"0000" when others;
+	dc1: data_cache port map (
+		clka => clk,
+		wea => dc_wea,
+		addra => alu_output,
+		dina => rs_2,
+		douta => dc_output
 	);
 	
 end Behavioral;
