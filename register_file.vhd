@@ -29,9 +29,11 @@ use IEEE.NUMERIC_STD.ALL;
 entity register_file is
     Port ( clk : in  STD_LOGIC;
 			  wr : in STD_LOGIC;
+			  --! addresses
            rs1 : in  STD_LOGIC_VECTOR (4 downto 0);
            rs2 : in  STD_LOGIC_VECTOR (4 downto 0);
            rd : in  STD_LOGIC_VECTOR (4 downto 0);
+			  --! input and output data
            id : in  STD_LOGIC_VECTOR (31 downto 0);
            os1 : out  STD_LOGIC_VECTOR (31 downto 0);
            os2 : out  STD_LOGIC_VECTOR (31 downto 0));
