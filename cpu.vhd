@@ -76,6 +76,13 @@ architecture Behavioral of cpu is
 	  );
 	end component;
 	
+	component control_unit is
+    Port ( opcode : in  STD_LOGIC_VECTOR (6 downto 0);
+           funct3 : in  STD_LOGIC_VECTOR (2 downto 0);
+           funct7 : in  STD_LOGIC_VECTOR (6 downto 0);
+           control_field : out  control_field_t);
+	end component;
+	
 	component data_cache
 	  port (
 		 clka : IN STD_LOGIC;
@@ -100,6 +107,9 @@ architecture Behavioral of cpu is
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
 	
+	alias opcode is instruction(6 downto 0);
+	alias funct3 is instruction(14 downto 12);
+	alias funct7 is instruction(31 downto 25);
 	alias a_rs_1 is instruction(24 downto 20);
 	alias a_rs_2 is instruction(19 downto 15);
 	alias a_rd is instruction(11 downto 7);
@@ -124,6 +134,14 @@ begin
 		clka => clk,
 		addra => pc_output,
 		douta => instruction
+	);
+	
+	--! control unit
+	cu1: control_unit port map (
+		opcode => opcode,
+		funct3 => funct3,
+		funct7 => funct7,
+		control_field => control_field
 	);
 	
 	--! retrieve immediates from instructions, depending on the type.

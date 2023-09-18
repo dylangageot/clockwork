@@ -33,7 +33,7 @@ use work.control_field.ALL;
 entity control_unit is
     Port ( opcode : in  STD_LOGIC_VECTOR (6 downto 0);
            funct3 : in  STD_LOGIC_VECTOR (2 downto 0);
-           funct6 : in  STD_LOGIC_VECTOR (6 downto 0);
+           funct7 : in  STD_LOGIC_VECTOR (6 downto 0);
            control_field : out  control_field_t);
 end control_unit;
 
@@ -41,7 +41,7 @@ architecture Behavioral of control_unit is
 
 begin
 
-	process (opcode, funct3, funct6)
+	process (opcode, funct3, funct7)
 	begin
 		case opcode is
 			--! LUI
