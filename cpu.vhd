@@ -89,15 +89,20 @@ architecture Behavioral of cpu is
 	
 	--! signals
 	signal control_field : control_field_t;
+	signal pc_write : std_logic := '0';
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
-	signal a_rs_1, a_rs_2, a_rd : std_logic_vector(4 downto 0);
 	signal pc_output, pc_input, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_2, 
-			 alu_output, memory_filter_r, memory_input, memory_output 
+			 alu_output, memory_filter_r, memory_output, 
+			 memory_output_filtered, pc_jump_branch_res
 			 : std_logic_vector(31 downto 0);
 	
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
+	
+	alias a_rs_1 is instruction(24 downto 20);
+	alias a_rs_2 is instruction(19 downto 15);
+	alias a_rd is instruction(11 downto 7);
 	
 begin
 
@@ -106,10 +111,13 @@ begin
 		clk => clk,
 		ce => control_field.program_counter.enable,
 		rst => rst,
-		ci => control_field.program_counter.write_pc,
+		ci => pc_write,
 		input => pc_input,
 		output => pc_output
 	);
+	pc_write <= control_field.program_counter.write_pc and 
+		(control_field.program_counter.is_jump or 
+			(alu_output(0) nand control_field.program_counter.negate_alu_output));
 
 	--! instruction cache
 	ic1: instruction_cache port map (
@@ -140,11 +148,15 @@ begin
 		os1 => rs_1,
 		os2 => rs_2
 	);
+	--! write back input mux
+	with control_field.register_file.input_mux select rf_input <=
+		alu_output when rf_alu_output,
+		memory_output_filtered when rf_memory_output,
+		std_logic_vector(unsigned(pc_output) + 4) when rf_pc_4,
+		immd_u when rf_u,
+		X"0000_0000" when others;
 
 	--! alu
-	with control_field.alu.port_2 select alu_port_2 <=
-		rs_2 when port_2_rs_2,
-		immd when others;
 	alu1: alu port map (
 		operation => control_field.alu.operation,
 		arithmetic => control_field.alu.arithmetic,
@@ -152,8 +164,29 @@ begin
 		input_2 => alu_port_2,
 		output => alu_output
 	);
+	--! alu port 2 mux
+	with control_field.alu.port_2 select alu_port_2 <=
+		rs_2 when port_2_rs_2,
+		immd_i when port_2_i,
+		immd_s when port_2_s,
+		immd_u when port_2_u,
+		X"0000_0000" when others;
+	
+	with control_field.program_counter.address_computation_mux select pc_input <=
+		alu_output when pc_alu,
+		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_jump,
+		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_branch,
+		X"0000_0000" when others;
 
 	--! data cache
+	memory_output_filtered <= memory_filter_r and memory_output;
+	dc1: data_cache port map (
+		clka => clk,
+		wea => memory_write,
+		addra => alu_output,
+		dina => rs_2,
+		douta => memory_output
+	);
 	with control_field.memory.byte_length select memory_filter_w <=
 		"1111" when word,
 		"0011" when half,
@@ -167,14 +200,6 @@ begin
 		X"0000_FFFF" when half,
 		X"0000_00FF" when byte,
 		X"0000_0000" when others;
-	memory_input <= memory_filter_r and rs_2;
-	dc1: data_cache port map (
-		clka => clk,
-		wea => memory_write,
-		addra => alu_output,
-		dina => memory_input,
-		douta => memory_output
-	);
 	
 end Behavioral;
 
