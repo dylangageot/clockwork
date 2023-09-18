@@ -12,26 +12,37 @@ use IEEE.STD_LOGIC_1164.all;
 
 package control_field is
 
-type byte_length_t is (none, word, half, byte);
-
 type alu_operation_t is (op_add, op_sll, op_slt, op_sltu, op_xor, op_srl, op_or, op_and);
+type byte_length_t is (none, word, half, byte);
+type alu_port_2_t is (port_2_rs_2, port_2_i, port_2_u);
 
-type control_field_t is record
-		pc_enable : std_logic;
-		pc_write_input : std_logic;
-		alu_operation : alu_operation_t;
-		alu_arithmetic : std_logic;
-		alu_immd : std_logic;
-		rf_write_input : std_logic;
-		dc_write_input : byte_length_t;
+type program_counter_t is record
+	enable : std_logic;
+	write_pc : std_logic;
 end record;
 
--- type <new_type> is
---  record
---    <type_name>        : std_logic_vector( 7 downto 0);
---    <type_name>        : std_logic;
--- end record;
---
+type register_file_t is record
+	write_rd : std_logic;
+end record;
+
+type alu_t is record
+	operation: alu_operation_t;
+	arithmetic: std_logic;
+	port_2: alu_port_2_t;
+end record;
+
+type memory_t is record
+	write_rs_2: std_logic;
+	byte_length : byte_length_t;
+end record;
+
+type control_field_t is record
+	program_counter : program_counter_t;
+	register_file : register_file_t;
+	alu : alu_t;
+	memory : memory_t;
+end record;
+
 -- Declare constants
 --
 -- constant <constant_name>		: time := <time_unit> ns;
@@ -46,31 +57,4 @@ end record;
 end control_field;
 
 package body control_field is
-
----- Example 1
---  function <function_name>  (signal <signal_name> : in <type_declaration>  ) return <type_declaration> is
---    variable <variable_name>     : <type_declaration>;
---  begin
---    <variable_name> := <signal_name> xor <signal_name>;
---    return <variable_name>; 
---  end <function_name>;
-
----- Example 2
---  function <function_name>  (signal <signal_name> : in <type_declaration>;
---                         signal <signal_name>   : in <type_declaration>  ) return <type_declaration> is
---  begin
---    if (<signal_name> = '1') then
---      return <signal_name>;
---    else
---      return 'Z';
---    end if;
---  end <function_name>;
-
----- Procedure Example
---  procedure <procedure_name>  (<type_declaration> <constant_name>  : in <type_declaration>) is
---    
---  begin
---    
---  end <procedure_name>;
- 
 end control_field;

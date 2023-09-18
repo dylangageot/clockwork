@@ -19,11 +19,8 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 use work.control_field.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx primitives in this code.
@@ -43,7 +40,7 @@ end cpu;
 architecture Behavioral of cpu is
 
 	component alu is
-		 Port ( op: in STD_LOGIC_VECTOR(2 downto 0);
+		 Port ( operation: alu_operation_t;
 				  arithmetic : in STD_LOGIC;
 				  input_1 : in  STD_LOGIC_VECTOR (31 downto 0);
 				  input_2 : in  STD_LOGIC_VECTOR (31 downto 0);
@@ -92,21 +89,24 @@ architecture Behavioral of cpu is
 	
 	--! signals
 	signal control_field : control_field_t;
-	signal dc_wea : std_logic_vector(3 downto 0);
-	signal ars_1, ars_2, ard : std_logic_vector(4 downto 0);
+	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
+	signal a_rs_1, a_rs_2, a_rd : std_logic_vector(4 downto 0);
 	signal pc_output, pc_input, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_2, 
-			 alu_output, dc_output 
+			 alu_output, memory_filter_r, memory_input, memory_output 
 			 : std_logic_vector(31 downto 0);
+	
+	--! immediate thangs!
+	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
 	
 begin
 
 	--! program counter
 	pc1: program_counter port map (
 		clk => clk,
-		ce => control_field.pc_enable,
+		ce => control_field.program_counter.enable,
 		rst => rst,
-		ci => control_field.pc_write_input,
+		ci => control_field.program_counter.write_pc,
 		input => pc_input,
 		output => pc_output
 	);
@@ -119,44 +119,61 @@ begin
 	);
 	
 	--! retrieve immediates from instructions, depending on the type.
-	
+	immd_i <= std_logic_vector(resize(signed(instruction(31 downto 20)), immd_i'length));
+	immd_s <= std_logic_vector(resize(signed(instruction(31 downto 25) & instruction(11 downto 7)), immd_s'length));
+	immd_b <= std_logic_vector(resize(signed(
+			instruction(31) & instruction(7) & instruction(30 downto 25) & instruction(11 downto 8) & '0'
+			), immd_b'length));
+	immd_u <= std_logic_vector(instruction(31 downto 12) & X"000"); 
+	immd_j <= std_logic_vector(resize(signed(
+		instruction(31) & instruction(19 downto 12) & instruction(20) & instruction(30 downto 21) & '0'
+		), immd_j'length));
 	
 	--! register file
 	rf1: register_file port map (
 		clk => clk,
-		wr => control_field.rf_write_input,
-		rs1 => ars_1,
-		rs2 => ars_2,
-		rd => ard,
+		wr => control_field.register_file.write_rd,
+		rs1 => a_rs_1,
+		rs2 => a_rs_2,
+		rd => a_rd,
 		id => rf_input,
 		os1 => rs_1,
 		os2 => rs_2
 	);
 
 	--! alu
-	with control_field.alu_immd select alu_port_2 <=
-		rs_2 when '0',
+	with control_field.alu.port_2 select alu_port_2 <=
+		rs_2 when port_2_rs_2,
 		immd when others;
 	alu1: alu port map (
-		op => control_field.alu_op,
-		arithmetic => control_field.alu_arithmetic,
+		operation => control_field.alu.operation,
+		arithmetic => control_field.alu.arithmetic,
 		input_1 => rs_1,
 		input_2 => alu_port_2,
 		output => alu_output
 	);
 
 	--! data cache
-	with control_field.dc_write_input select dc_wea <=
+	with control_field.memory.byte_length select memory_filter_w <=
 		"1111" when word,
 		"0011" when half,
 		"0001" when byte,
 		"0000" when others;
+	with control_field.memory.write_rs_2 select memory_write <=
+		memory_filter_w when '1',
+		"0000" when others;
+	with control_field.memory.byte_length select memory_filter_r <=
+		X"FFFF_FFFF" when word,
+		X"0000_FFFF" when half,
+		X"0000_00FF" when byte,
+		X"0000_0000" when others;
+	memory_input <= memory_filter_r and rs_2;
 	dc1: data_cache port map (
 		clka => clk,
-		wea => dc_wea,
+		wea => memory_write,
 		addra => alu_output,
-		dina => rs_2,
-		douta => dc_output
+		dina => memory_input,
+		douta => memory_output
 	);
 	
 end Behavioral;
