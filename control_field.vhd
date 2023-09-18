@@ -14,10 +14,12 @@ package control_field is
 
 type byte_length_t is (none, word, half, byte);
 
+type alu_operation_t is (op_add, op_sll, op_slt, op_sltu, op_xor, op_srl, op_or, op_and);
+
 type control_field_t is record
 		pc_enable : std_logic;
 		pc_write_input : std_logic;
-		alu_op : std_logic_vector(2 downto 0);
+		alu_operation : alu_operation_t;
 		alu_arithmetic : std_logic;
 		alu_immd : std_logic;
 		rf_write_input : std_logic;

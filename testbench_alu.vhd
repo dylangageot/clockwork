@@ -27,7 +27,8 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
+USE work.control_field.ALL;
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
@@ -41,7 +42,7 @@ ARCHITECTURE behavior OF testbench_alu IS
  
     COMPONENT alu
     PORT(
-         op : IN  std_logic_vector(2 downto 0);
+         operation : IN  alu_operation_t;
          arithmetic : IN  std_logic;
          input_1 : IN  std_logic_vector(31 downto 0);
          input_2 : IN  std_logic_vector(31 downto 0);
@@ -51,7 +52,7 @@ ARCHITECTURE behavior OF testbench_alu IS
     
 
    --Inputs
-   signal op : std_logic_vector(2 downto 0) := (others => '0');
+   signal operation : alu_operation_t := op_add;
    signal arithmetic : std_logic := '0';
    signal input_1 : std_logic_vector(31 downto 0) := (others => '0');
    signal input_2 : std_logic_vector(31 downto 0) := (others => '0');
@@ -63,7 +64,7 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: alu PORT MAP (
-          op => op,
+          operation => operation,
           arithmetic => arithmetic,
           input_1 => input_1,
           input_2 => input_2,
@@ -78,7 +79,7 @@ BEGIN
 
       -- insert stimulus here 
 		-- test add
-		op <= "000";
+		operation <= op_add;
 		arithmetic <= '0';
 		input_1 <= X"0000_FFFF";
 		input_2 <= X"0000_0001";
@@ -87,7 +88,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test sub
-		op <= "000";
+		operation <= op_add;
 		arithmetic <= '1';
 		input_1 <= X"0000_FFFF";
 		input_2 <= X"0000_0001";
@@ -96,7 +97,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test sll
-		op <= "001";
+		operation <= op_sll;
 		arithmetic <= '0';
 		input_1 <= X"0000_FFFF";
 		input_2 <= X"0000_0001";
@@ -105,7 +106,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test slt
-		op <= "010";
+		operation <= op_slt;
 		arithmetic <= '0';
 		input_1 <= X"FFFF_FFFF";
 		input_2 <= X"FFFF_FFFF";
@@ -119,7 +120,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test sltu
-		op <= "011";
+		operation <= op_sltu;
 		arithmetic <= '0';
 		input_1 <= X"FFFF_FFFF";
 		input_2 <= X"0000_FFFF";
@@ -133,7 +134,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test xor
-		op <= "100";
+		operation <= op_xor;
 		arithmetic <= '0';
 		input_1 <= X"0000_FFFF";
 		input_2 <= X"FFFF_FFFF";
@@ -142,7 +143,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test srl
-		op <= "101";
+		operation <= op_srl;
 		arithmetic <= '0';
 		input_1 <= X"0000_FFFF";
 		input_2 <= X"0000_0001";
@@ -151,7 +152,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test sra
-		op <= "101";
+		operation <= op_srl;
 		arithmetic <= '1';
 		input_1 <= X"8000_FFFF";
 		input_2 <= X"0000_0001";
@@ -160,7 +161,7 @@ BEGIN
 		wait for 10 ns;
 		
 		-- test or
-		op <= "110";
+		operation <= op_or;
 		arithmetic <= '0';
 		input_1 <= X"A0A0_A0A0";
 		input_2 <= X"0505_0505";
@@ -169,7 +170,7 @@ BEGIN
 		wait for 10 ns;
 				
 		-- test and
-		op <= "111";
+		operation <= op_and;
 		arithmetic <= '0';
 		input_1 <= X"A0A0_A0A0";
 		input_2 <= X"FFFF_0000";

@@ -111,6 +111,16 @@ begin
 		output => pc_output
 	);
 
+	--! instruction cache
+	ic1: instruction_cache port map (
+		clka => clk,
+		addra => pc_output,
+		douta => instruction
+	);
+	
+	--! retrieve immediates from instructions, depending on the type.
+	
+	
 	--! register file
 	rf1: register_file port map (
 		clk => clk,
@@ -133,13 +143,6 @@ begin
 		input_1 => rs_1,
 		input_2 => alu_port_2,
 		output => alu_output
-	);
-	
-	--! instruction cache
-	ic1: instruction_cache port map (
-		clka => clk,
-		addra => pc_output,
-		douta => instruction
 	);
 
 	--! data cache
