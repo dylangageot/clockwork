@@ -109,7 +109,7 @@ begin
 	--! program counter
 	pc1: program_counter port map (
 		clk => clk,
-		ce => control_field.program_counter.enable,
+		ce => '1',
 		rst => rst,
 		ci => pc_write,
 		input => pc_input,
