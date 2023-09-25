@@ -17,7 +17,7 @@ type alu_operation_t is (op_add, op_sll, op_slt, op_sltu, op_xor, op_srl, op_or,
 type byte_length_t is (none, word, half, byte);
 type alu_port_1_t is (port_1_rs_1, port_1_pc);
 type alu_port_2_t is (port_2_rs_2, port_2_i, port_2_s, port_2_u);
-type register_file_input_mux_t is (rf_memory_output, rf_alu_output, rf_pc_4, rf_u);
+type register_file_input_mux_t is (rf_mem_byte, rf_mem_unsigned_byte, rf_mem_half, rf_mem_unsigned_half, rf_mem_word, rf_alu_output, rf_pc_4, rf_u);
 
 type program_counter_t is record
 	write_pc : std_logic;

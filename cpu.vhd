@@ -101,8 +101,7 @@ architecture Behavioral of cpu is
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
 	signal pc_output, pc_input, next_pc, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
-			 alu_output, memory_filter_r, memory_output, 
-			 memory_output_filtered, pc_jump_branch_res
+			 alu_output, memory_filter_r, memory_output
 			 : std_logic_vector(31 downto 0);
 	
 	--! immediate thangs!
@@ -114,6 +113,9 @@ architecture Behavioral of cpu is
 	alias a_rs_1 is instruction(19 downto 15);
 	alias a_rs_2 is instruction(24 downto 20);
 	alias a_rd is instruction(11 downto 7);
+	
+	alias memory_out_byte is memory_output(7 downto 0);
+	alias memory_out_half is memory_output(15 downto 0);
 	
 begin
 
@@ -178,7 +180,11 @@ begin
 	--! write back input mux
 	with control_field.register_file.input_mux select rf_input <=
 		alu_output when rf_alu_output,
-		memory_output_filtered when rf_memory_output,
+		std_logic_vector(resize(signed(memory_out_byte), 32)) when rf_mem_byte,
+		std_logic_vector(resize(unsigned(memory_out_byte), 32)) when rf_mem_unsigned_byte,
+		std_logic_vector(resize(signed(memory_out_half), 32)) when rf_mem_half,
+		std_logic_vector(resize(unsigned(memory_out_half), 32)) when rf_mem_unsigned_half,
+		memory_output when rf_mem_word,
 		std_logic_vector(unsigned(pc_output) + 4) when rf_pc_4,
 		immd_u when rf_u,
 		X"0000_0000" when others;
@@ -205,7 +211,6 @@ begin
 		X"0000_0000" when others;
 
 	--! data cache
-	memory_output_filtered <= memory_filter_r and memory_output;
 	dc1: data_cache port map (
 		clka => neg_clk,
 		wea => memory_write,
@@ -221,11 +226,6 @@ begin
 	with control_field.memory.write_rs_2 select memory_write <=
 		memory_filter_w when '1',
 		"0000" when others;
-	with control_field.memory.byte_length select memory_filter_r <=
-		X"FFFF_FFFF" when word,
-		X"0000_FFFF" when half,
-		X"0000_00FF" when byte,
-		X"0000_0000" when others;
 	
 end Behavioral;
 

@@ -311,6 +311,254 @@ begin
 							)	
 						);
 				end case;
+				
+			--! load store
+			when B"0000011" =>
+				case funct3 is
+						--! lb
+						when B"000" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_mem_byte
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => byte
+							)	
+						);
+						--! lh
+						when B"001" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_mem_half
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => half
+							)	
+						);
+						--! lw
+						when B"010" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_mem_word
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => word
+							)	
+						);
+						--! lbu
+						when B"100" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_mem_unsigned_byte
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => byte
+							)	
+						);
+						--! lhu
+						when B"101" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_mem_unsigned_half
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => half
+							)	
+						);
+					when others =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+				end case;
+			
+			--! store 
+			when B"0100011" =>
+				case funct3 is
+						--! sb
+						when B"000" =>
+							control_field <= (
+								program_counter => (
+										write_pc => '0',
+										is_jump => '0',
+										negate_alu_output => '0',
+										address_computation_mux => pc_alu
+								),
+								register_file => (
+									write_rd => '0',
+									input_mux => rf_u
+								),
+								alu => (
+									operation => op_add,
+									arithmetic => '0',
+									port_1 => port_1_rs_1,
+									port_2 => port_2_s
+								),
+								memory => (
+									write_rs_2 => '1',
+									byte_length => byte
+								)	
+							);
+						--! sh
+						when B"001" =>
+							control_field <= (
+								program_counter => (
+										write_pc => '0',
+										is_jump => '0',
+										negate_alu_output => '0',
+										address_computation_mux => pc_alu
+								),
+								register_file => (
+									write_rd => '0',
+									input_mux => rf_u
+								),
+								alu => (
+									operation => op_add,
+									arithmetic => '0',
+									port_1 => port_1_rs_1,
+									port_2 => port_2_s
+								),
+								memory => (
+									write_rs_2 => '1',
+									byte_length => half
+								)	
+							);
+						--! sw
+						when B"010" =>
+							control_field <= (
+								program_counter => (
+										write_pc => '0',
+										is_jump => '0',
+										negate_alu_output => '0',
+										address_computation_mux => pc_alu
+								),
+								register_file => (
+									write_rd => '0',
+									input_mux => rf_u
+								),
+								alu => (
+									operation => op_add,
+									arithmetic => '0',
+									port_1 => port_1_rs_1,
+									port_2 => port_2_s
+								),
+								memory => (
+									write_rs_2 => '1',
+									byte_length => word
+								)	
+							);
+					when others =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+				end case;
 			--! addi, slti...
 			when B"0010011" =>
 				case funct3 is
