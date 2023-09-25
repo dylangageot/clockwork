@@ -42,6 +42,7 @@ ARCHITECTURE behavior OF testbench_cpu IS
     COMPONENT cpu
     PORT(
          clk : IN  std_logic;
+		   neg_clk: in STD_LOGIC;
          rst : IN  std_logic;
          address : OUT  std_logic_vector(31 downto 0);
          data : INOUT  std_logic_vector(31 downto 0);
@@ -53,6 +54,7 @@ ARCHITECTURE behavior OF testbench_cpu IS
 
    --Inputs
    signal clk : std_logic := '0';
+   signal neg_clk : std_logic := '0';
    signal rst : std_logic := '0';
 
 	--BiDirs
@@ -71,6 +73,7 @@ BEGIN
 	-- Instantiate the Unit Under Test (UUT)
    uut: cpu PORT MAP (
           clk => clk,
+			 neg_clk => neg_clk,
           rst => rst,
           address => address,
           data => data,
@@ -86,7 +89,7 @@ BEGIN
 		clk <= '1';
 		wait for clk_period/2;
    end process;
- 
+	neg_clk <= not clk;
 
    -- Stimulus process
    stim_proc: process

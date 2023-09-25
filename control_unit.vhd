@@ -140,6 +140,177 @@ begin
 						byte_length => none
 					)	
 				);
+			--! branch
+			when B"1100011" =>
+				case funct3 is
+					--! beq
+					when b"000" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '1',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_branch
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_eq,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! bne
+					when b"001" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '1',
+									is_jump => '0',
+									negate_alu_output => '1',
+									address_computation_mux => pc_branch
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_eq,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! blt
+					when b"100" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '1',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_branch
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_slt,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! bge
+					when b"101" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '1',
+									is_jump => '0',
+									negate_alu_output => '1',
+									address_computation_mux => pc_branch
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_slt,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! bltu
+					when b"110" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '1',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_branch
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_sltu,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! bgeu
+					when b"111" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '1',
+									is_jump => '0',
+									negate_alu_output => '1',
+									address_computation_mux => pc_branch
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_sltu,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					when others =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+				end case;
 			--! addi, slti...
 			when B"0010011" =>
 				case funct3 is

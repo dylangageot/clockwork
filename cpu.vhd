@@ -29,6 +29,7 @@ use work.control_field.ALL;
 
 entity cpu is
     Port ( clk : in  STD_LOGIC;
+			  neg_clk: in STD_LOGIC;
 			  rst : in STD_LOGIC;
            address : out  STD_LOGIC_VECTOR (31 downto 0);
            data : inout  STD_LOGIC_VECTOR (31 downto 0);
@@ -132,7 +133,7 @@ begin
 		X"0000_0000" when others;
 	with control_field.program_counter.write_pc and (
 				control_field.program_counter.is_jump or 
-				(alu_output(0) nand control_field.program_counter.negate_alu_output)
+				(alu_output(0) xor control_field.program_counter.negate_alu_output)
 	) select next_pc <=
 		pc_input when '1',
 		std_logic_vector(unsigned(pc_output) + 4) when '0';
@@ -206,7 +207,7 @@ begin
 	--! data cache
 	memory_output_filtered <= memory_filter_r and memory_output;
 	dc1: data_cache port map (
-		clka => clk,
+		clka => neg_clk,
 		wea => memory_write,
 		addra => alu_output,
 		dina => rs_2,

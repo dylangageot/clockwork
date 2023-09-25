@@ -16,13 +16,17 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="19" />
+   <WVObjectSize size="21" />
    <wave_markers>
-      <marker time="489208000" label="" />
+      <marker time="565000000" label="" />
    </wave_markers>
    <wvobject fp_name="/testbench_cpu/clk" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/neg_clk" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">neg_clk</obj_property>
+      <obj_property name="ObjectShortName">neg_clk</obj_property>
    </wvobject>
    <wvobject fp_name="/testbench_cpu/rst" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">rst</obj_property>
@@ -66,6 +70,11 @@
       <obj_property name="ElementShortName">alu_port_2[31:0]</obj_property>
       <obj_property name="ObjectShortName">alu_port_2[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/alu1/output" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">output[31:0]</obj_property>
+      <obj_property name="ObjectShortName">output[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/testbench_cpu/uut/rf1/rd" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">rd[4:0]</obj_property>

@@ -77,6 +77,12 @@ begin
 				output <= input_1 or input_2;
 			when op_and =>
 				output <= input_1 and input_2;
+			when op_eq =>
+				if input_1 = input_2 then
+					output <= (0 => '1', others => '0');
+				else
+					output <= (others => '0');
+				end if;
 			when others =>
             output <= (others => '0');
 		end case;
