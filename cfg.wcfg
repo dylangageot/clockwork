@@ -16,7 +16,10 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="13" />
+   <WVObjectSize size="17" />
+   <wave_markers>
+      <marker time="105000000" label="" />
+   </wave_markers>
    <wvobject fp_name="/testbench_cpu/clk" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -25,9 +28,9 @@
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
    </wvobject>
-   <wvobject fp_name="/testbench_cpu/uut/pc_input" type="array" db_ref_id="1">
-      <obj_property name="ElementShortName">pc_input[31:0]</obj_property>
-      <obj_property name="ObjectShortName">pc_input[31:0]</obj_property>
+   <wvobject fp_name="/testbench_cpu/uut/next_pc" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">next_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">next_pc[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/testbench_cpu/uut/pc_output" type="array" db_ref_id="1">
@@ -38,6 +41,16 @@
    <wvobject fp_name="/testbench_cpu/uut/control_field" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">control_field</obj_property>
       <obj_property name="ObjectShortName">control_field</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/rf1/rs1" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">rs1[4:0]</obj_property>
+      <obj_property name="ObjectShortName">rs1[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/rf1/rs2" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">rs2[4:0]</obj_property>
+      <obj_property name="ObjectShortName">rs2[4:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/testbench_cpu/uut/instruction" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">instruction[31:0]</obj_property>
@@ -64,6 +77,11 @@
       <obj_property name="ObjectShortName">rf_input[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/pc_input" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">pc_input[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc_input[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
    <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[28]" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">[28]</obj_property>
       <obj_property name="ObjectShortName">register_file[28]</obj_property>
@@ -77,6 +95,11 @@
    <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[1]" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">[1]</obj_property>
       <obj_property name="ObjectShortName">register_file[1]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[5]" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">[5]</obj_property>
+      <obj_property name="ObjectShortName">register_file[5]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
 </wave_config>

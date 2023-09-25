@@ -97,7 +97,6 @@ architecture Behavioral of cpu is
 	
 	--! signals
 	signal control_field : control_field_t;
-	signal pc_counter: UNSIGNED(31 downto 0) := (others => '0');
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
 	signal pc_output, pc_input, next_pc, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
@@ -111,8 +110,8 @@ architecture Behavioral of cpu is
 	alias opcode is instruction(6 downto 0); 
 	alias funct3 is instruction(14 downto 12);
 	alias funct7 is instruction(31 downto 25);
-	alias a_rs_1 is instruction(24 downto 20);
-	alias a_rs_2 is instruction(19 downto 15);
+	alias a_rs_1 is instruction(19 downto 15);
+	alias a_rs_2 is instruction(24 downto 20);
 	alias a_rd is instruction(11 downto 7);
 	
 begin
@@ -120,8 +119,8 @@ begin
 	--! program counter
 	process (clk, rst)
 	begin
-		if rst = '1' then
-			pc_output <= (others => '0');
+		if rst = '1' then 
+			pc_output <= X"FFFF_FFFC";
 		elsif rising_edge(clk) then
 			pc_output <= next_pc;
 		end if;
