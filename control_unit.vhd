@@ -116,6 +116,31 @@ begin
 						byte_length => none
 					)	
 				);
+			--! JALR (relative to rs1)
+			--! todo: test it!
+			when B"1100111" =>
+				control_field <= (
+					program_counter => (
+							write_pc => '1',
+							is_jump => '1',
+							negate_alu_output => '0',
+							address_computation_mux => pc_alu
+					),
+					register_file => (
+						write_rd => '1',
+						input_mux => rf_pc_4
+					),
+					alu => (
+						operation => op_add,
+						arithmetic => '0',
+						port_1 => port_1_rs_1,
+						port_2 => port_2_i
+					),
+					memory => (
+						write_rs_2 => '0',
+						byte_length => none
+					)	
+				);
 			when others =>
 				control_field <= (
 					program_counter => (

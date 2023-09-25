@@ -27,6 +27,7 @@ entity program_counter is
            rst : in  STD_LOGIC;
 			  ci : in STD_LOGIC;
 			  input : in  STD_LOGIC_VECTOR (31 downto 0);
+			  next_pc : out STD_LOGIC_VECTOR(31 downto 0);
            output : out  STD_LOGIC_VECTOR (31 downto 0));
 end program_counter;
 
@@ -36,18 +37,11 @@ architecture Behavioral of program_counter is
 
 begin
 
-process (clk, ce, rst)
-begin
-	if rst = '1' then
-		pc_counter <= (others => '0');
-	elsif rising_edge(clk) and ce = '1' then
-		if ci = '1' then
-			pc_counter <= UNSIGNED(input);
-		else
-			pc_counter <= pc_counter + 4;
-		end if;
-	end if;
-end process;
+
+
+with ci select next_pc <=
+	input when '1',
+	std_logic_vector(pc_counter + 4) when '0';
 
 output <= std_logic_vector(pc_counter);
 

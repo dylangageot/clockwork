@@ -54,6 +54,7 @@ architecture Behavioral of cpu is
            rst : in  STD_LOGIC;
 			  ci : in STD_LOGIC;
 			  input : in  STD_LOGIC_VECTOR (31 downto 0);
+			  next_pc : out STD_LOGIC_VECTOR(31 downto 0);
            output : out  STD_LOGIC_VECTOR (31 downto 0));
 	end component;
 
@@ -96,9 +97,9 @@ architecture Behavioral of cpu is
 	
 	--! signals
 	signal control_field : control_field_t;
-	signal pc_write : std_logic := '0';
+	signal pc_counter: UNSIGNED(31 downto 0) := (others => '0');
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
-	signal pc_output, pc_input, instruction,
+	signal pc_output, pc_input, next_pc, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
 			 alu_output, memory_filter_r, memory_output, 
 			 memory_output_filtered, pc_jump_branch_res
@@ -107,7 +108,7 @@ architecture Behavioral of cpu is
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
 	
-	alias opcode is instruction(6 downto 0);
+	alias opcode is instruction(6 downto 0); 
 	alias funct3 is instruction(14 downto 12);
 	alias funct7 is instruction(31 downto 25);
 	alias a_rs_1 is instruction(24 downto 20);
@@ -117,22 +118,30 @@ architecture Behavioral of cpu is
 begin
 
 	--! program counter
-	pc1: program_counter port map (
-		clk => clk,
-		ce => '1',
-		rst => rst,
-		ci => pc_write,
-		input => pc_input,
-		output => pc_output
-	);
-	pc_write <= control_field.program_counter.write_pc and 
-		(control_field.program_counter.is_jump or 
-			(alu_output(0) nand control_field.program_counter.negate_alu_output));
+	process (clk, rst)
+	begin
+		if rst = '1' then
+			pc_output <= (others => '0');
+		elsif rising_edge(clk) then
+			pc_output <= next_pc;
+		end if;
+	end process;	
+	with control_field.program_counter.address_computation_mux select pc_input <=
+		alu_output(31 downto 1) & '0' when pc_alu,
+		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_jump,
+		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_branch,
+		X"0000_0000" when others;
+	with control_field.program_counter.write_pc and (
+				control_field.program_counter.is_jump or 
+				(alu_output(0) nand control_field.program_counter.negate_alu_output)
+	) select next_pc <=
+		pc_input when '1',
+		std_logic_vector(unsigned(pc_output) + 4) when '0';
 
 	--! instruction cache
 	ic1: instruction_cache port map (
 		clka => clk,
-		addra => pc_output,
+		addra => next_pc,
 		douta => instruction
 	);
 	
@@ -193,12 +202,6 @@ begin
 		immd_i when port_2_i,
 		immd_s when port_2_s,
 		immd_u when port_2_u,
-		X"0000_0000" when others;
-	
-	with control_field.program_counter.address_computation_mux select pc_input <=
-		alu_output when pc_alu,
-		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_jump,
-		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_branch,
 		X"0000_0000" when others;
 
 	--! data cache
