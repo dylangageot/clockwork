@@ -99,7 +99,7 @@ architecture Behavioral of cpu is
 	signal pc_write : std_logic := '0';
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
 	signal pc_output, pc_input, instruction,
-			 rf_input, rs_1, rs_2, immd, alu_port_2, 
+			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
 			 alu_output, memory_filter_r, memory_output, 
 			 memory_output_filtered, pc_jump_branch_res
 			 : std_logic_vector(31 downto 0);
@@ -178,10 +178,15 @@ begin
 	alu1: alu port map (
 		operation => control_field.alu.operation,
 		arithmetic => control_field.alu.arithmetic,
-		input_1 => rs_1,
+		input_1 => alu_port_1,
 		input_2 => alu_port_2,
 		output => alu_output
 	);
+	--! alu port 1 mux
+	with control_field.alu.port_1 select alu_port_1 <=
+		rs_1 when port_1_rs_1,
+		pc_output when port_1_pc,
+		X"0000_0000" when others;
 	--! alu port 2 mux
 	with control_field.alu.port_2 select alu_port_2 <=
 		rs_2 when port_2_rs_2,

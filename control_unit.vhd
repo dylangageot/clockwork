@@ -60,7 +60,32 @@ begin
 					alu => (
 						operation => op_add,
 						arithmetic => '0',
+						port_1 => port_1_rs_1,
 						port_2 => port_2_rs_2
+					),
+					memory => (
+						write_rs_2 => '0',
+						byte_length => none
+					)	
+				);
+			--! AUIPC
+			when B"0010111" =>
+				control_field <= (
+					program_counter => (
+							write_pc => '0',
+							is_jump => '0',
+							negate_alu_output => '0',
+							address_computation_mux => pc_alu
+					),
+					register_file => (
+						write_rd => '1',
+						input_mux => rf_alu_output
+					),
+					alu => (
+						operation => op_add,
+						arithmetic => '0',
+						port_1 => port_1_pc,
+						port_2 => port_2_u
 					),
 					memory => (
 						write_rs_2 => '0',
@@ -82,6 +107,7 @@ begin
 					alu => (
 						operation => op_add,
 						arithmetic => '0',
+						port_1 => port_1_rs_1,
 						port_2 => port_2_rs_2
 					),
 					memory => (
