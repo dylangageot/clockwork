@@ -16,9 +16,9 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="17" />
+   <WVObjectSize size="19" />
    <wave_markers>
-      <marker time="105000000" label="" />
+      <marker time="489208000" label="" />
    </wave_markers>
    <wvobject fp_name="/testbench_cpu/clk" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">clk</obj_property>
@@ -50,7 +50,7 @@
    <wvobject fp_name="/testbench_cpu/uut/rf1/rs2" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">rs2[4:0]</obj_property>
       <obj_property name="ObjectShortName">rs2[4:0]</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/testbench_cpu/uut/instruction" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">instruction[31:0]</obj_property>
@@ -95,7 +95,17 @@
    <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[1]" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">[1]</obj_property>
       <obj_property name="ObjectShortName">register_file[1]</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[2]" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">[2]</obj_property>
+      <obj_property name="ObjectShortName">register_file[2]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[3]" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">[3]</obj_property>
+      <obj_property name="ObjectShortName">register_file[3]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/testbench_cpu/uut/rf1/register_file[5]" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">[5]</obj_property>

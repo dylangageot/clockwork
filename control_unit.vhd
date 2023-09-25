@@ -117,7 +117,6 @@ begin
 					)	
 				);
 			--! JALR (relative to rs1)
-			--! todo: test it!
 			when B"1100111" =>
 				control_field <= (
 					program_counter => (
@@ -141,6 +140,444 @@ begin
 						byte_length => none
 					)	
 				);
+			--! addi, slti...
+			when B"0010011" =>
+				case funct3 is
+					-- ! addi
+					when b"000" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! slti
+					when b"010" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_slt,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! sltui
+					when b"011" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_sltu,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! xori
+					when b"100" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_xor,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! ori
+					when b"110" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_or,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! andi
+					when b"111" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_and,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! slli
+					when "001" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_sll,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_i
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! srli & srai
+					when "101" =>
+							control_field <= (
+								program_counter => (
+										write_pc => '0',
+										is_jump => '0',
+										negate_alu_output => '0',
+										address_computation_mux => pc_alu
+								),
+								register_file => (
+									write_rd => '1',
+									input_mux => rf_alu_output
+								),
+								alu => (
+									operation => op_srl,
+									arithmetic => funct7(5),
+									port_1 => port_1_rs_1,
+									port_2 => port_2_i
+								),
+								memory => (
+									write_rs_2 => '0',
+									byte_length => none
+								)	
+							);
+					when others =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+				end case;
+			--! add, slt...
+			when B"0110011" =>
+				case funct3 is
+					-- ! add or sub
+					when b"000" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => funct7(5),
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! slt
+					when b"010" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_slt,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! sltu
+					when b"011" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_sltu,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					-- ! xor
+					when b"100" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_xor,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! or
+					when b"110" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_or,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! and
+					when b"111" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_and,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! sll
+					when "001" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_sll,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					--! srli & srai
+					when "101" =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '1',
+								input_mux => rf_alu_output
+							),
+							alu => (
+								operation => op_srl,
+								arithmetic => funct7(5),
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+					when others =>
+						control_field <= (
+							program_counter => (
+									write_pc => '0',
+									is_jump => '0',
+									negate_alu_output => '0',
+									address_computation_mux => pc_alu
+							),
+							register_file => (
+								write_rd => '0',
+								input_mux => rf_u
+							),
+							alu => (
+								operation => op_add,
+								arithmetic => '0',
+								port_1 => port_1_rs_1,
+								port_2 => port_2_rs_2
+							),
+							memory => (
+								write_rs_2 => '0',
+								byte_length => none
+							)	
+						);
+				end case;
 			when others =>
 				control_field <= (
 					program_counter => (
