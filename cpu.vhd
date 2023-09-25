@@ -227,5 +227,7 @@ begin
 		memory_filter_w when '1',
 		"0000" when others;
 	
+	address <= X"0000_00" & pc_output(7 downto 0);
+	
 end Behavioral;
 
