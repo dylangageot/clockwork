@@ -29,12 +29,12 @@ use work.control_field.ALL;
 
 entity cpu is
     Port ( clk : in  STD_LOGIC;
-			  neg_clk: in STD_LOGIC;
 			  rst : in STD_LOGIC;
-           address : out  STD_LOGIC_VECTOR (31 downto 0);
+           address : inout  STD_LOGIC_VECTOR (31 downto 0);
            data : inout  STD_LOGIC_VECTOR (31 downto 0);
-           enable : out  STD_LOGIC;
-			  wr : out STD_LOGIC
+			  wr : inout STD_LOGIC_VECTOR(3 downto 0);
+			  rd : inout STD_LOGIC;
+			  ready: inout STD_LOGIC
 			 );
 end cpu;
 
@@ -85,24 +85,14 @@ architecture Behavioral of cpu is
            control_field : out  control_field_t);
 	end component;
 	
-	component data_cache
-	  port (
-		 clka : IN STD_LOGIC;
-		 wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		 addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
-	  );
-	end component;
-	
-	
 	--! signals
 	signal control_field : control_field_t;
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
 	signal pc_output, pc_input, next_pc, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
-			 alu_output, memory_filter_r, memory_output
+			 alu_output, memory_filter_r
 			 : std_logic_vector(31 downto 0);
+	signal write_rd : std_logic;
 	
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
@@ -114,17 +104,19 @@ architecture Behavioral of cpu is
 	alias a_rs_2 is instruction(24 downto 20);
 	alias a_rd is instruction(11 downto 7);
 	
-	alias memory_out_byte is memory_output(7 downto 0);
-	alias memory_out_half is memory_output(15 downto 0);
+	alias memory_out_byte is data(7 downto 0);
+	alias memory_out_half is data(15 downto 0);
 	
 begin
 
 	--! program counter
-	process (clk, rst)
+	process (clk, rst, control_field, ready)
 	begin
 		if rst = '1' then 
 			pc_output <= X"FFFF_FFFC";
-		elsif rising_edge(clk) then
+		elsif rising_edge(clk) and 
+			not((control_field.program_counter.wait_memory = '1' and ready = '0'))
+		then
 			pc_output <= next_pc;
 		end if;
 	end process;	
@@ -169,7 +161,7 @@ begin
 	--! register file
 	rf1: register_file port map (
 		clk => clk,
-		wr => control_field.register_file.write_rd,
+		wr => write_rd,
 		rs1 => a_rs_1,
 		rs2 => a_rs_2,
 		rd => a_rd,
@@ -177,6 +169,8 @@ begin
 		os1 => rs_1,
 		os2 => rs_2
 	);
+	--! write back if write rd is set and that if reading from memory is ready
+	write_rd <= control_field.register_file.write_rd and not(control_field.program_counter.wait_memory and not(ready));
 	--! write back input mux
 	with control_field.register_file.input_mux select rf_input <=
 		alu_output when rf_alu_output,
@@ -184,7 +178,7 @@ begin
 		std_logic_vector(resize(unsigned(memory_out_byte), 32)) when rf_mem_unsigned_byte,
 		std_logic_vector(resize(signed(memory_out_half), 32)) when rf_mem_half,
 		std_logic_vector(resize(unsigned(memory_out_half), 32)) when rf_mem_unsigned_half,
-		memory_output when rf_mem_word,
+		data when rf_mem_word,
 		std_logic_vector(unsigned(pc_output) + 4) when rf_pc_4,
 		immd_u when rf_u,
 		X"0000_0000" when others;
@@ -210,24 +204,19 @@ begin
 		immd_u when port_2_u,
 		X"0000_0000" when others;
 
-	--! data cache
-	dc1: data_cache port map (
-		clka => neg_clk,
-		wea => memory_write,
-		addra => alu_output,
-		dina => rs_2,
-		douta => memory_output
-	);
 	with control_field.memory.byte_length select memory_filter_w <=
 		"1111" when word,
 		"0011" when half,
 		"0001" when byte,
 		"0000" when others;
-	with control_field.memory.write_rs_2 select memory_write <=
+	with control_field.memory.write_rs_2 select wr <=
 		memory_filter_w when '1',
 		"0000" when others;
 	
-	address <= X"0000_00" & pc_output(7 downto 0);
+	address <= alu_output;
+	data <= rs_2 when control_field.memory.write_rs_2 = '1' else (others => 'Z');
+	rd <= '1' when control_field.memory.read_mem = '1' else '0';
+	ready <= 'Z';
 	
 end Behavioral;
 

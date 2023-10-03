@@ -22,6 +22,7 @@ type register_file_input_mux_t is (rf_mem_byte, rf_mem_unsigned_byte, rf_mem_hal
 type program_counter_t is record
 	write_pc : std_logic;
 	is_jump : std_logic;
+	wait_memory: std_logic;
 	negate_alu_output : std_logic;
 	address_computation_mux : pc_address_computation_mux_t;
 end record;
@@ -39,6 +40,7 @@ type alu_t is record
 end record;
 
 type memory_t is record
+	read_mem: std_logic;
 	write_rs_2: std_logic;
 	byte_length : byte_length_t;
 end record;
@@ -54,6 +56,7 @@ constant nop : control_field_t := (
 	program_counter => (
 			write_pc => '0',
 			is_jump => '0',
+			wait_memory => '0',
 			negate_alu_output => '0',
 			address_computation_mux => pc_alu
 	),
@@ -68,6 +71,7 @@ constant nop : control_field_t := (
 		port_2 => port_2_rs_2
 	),
 	memory => (
+		read_mem => '0',
 		write_rs_2 => '0',
 		byte_length => none
 	)	

@@ -70,6 +70,7 @@ begin
 				control_field_var.program_counter := (
 					write_pc => '1',
 					is_jump => '1',
+					wait_memory => '0',
 					negate_alu_output => '0',
 					address_computation_mux => pc_jump
 				);
@@ -82,6 +83,7 @@ begin
 				control_field_var.program_counter := (
 					write_pc => '1',
 					is_jump => '1',
+					wait_memory => '0',
 					negate_alu_output => '0',
 					address_computation_mux => pc_alu
 				);
@@ -131,11 +133,13 @@ begin
 				end case;
 			--! load
 			when B"0000011" =>
+				control_field_var.program_counter.wait_memory := '1';
 				control_field_var.alu.operation := op_add;
 				control_field_var.alu.arithmetic := '0';
 				control_field_var.alu.port_1 := port_1_rs_1;
 				control_field_var.alu.port_2 := port_2_i;
 				control_field_var.register_file.write_rd := '1';
+				control_field_var.memory.read_mem := '1';
 				case funct3 is
 					--! lb
 					when B"000" =>
@@ -157,6 +161,7 @@ begin
 				end case;
 			--! store 
 			when B"0100011" =>
+				control_field_var.program_counter.wait_memory := '1';
 				control_field_var.alu.operation := op_add;
 				control_field_var.alu.arithmetic := '0';
 				control_field_var.alu.port_1 := port_1_rs_1;
@@ -186,11 +191,14 @@ begin
 				end if;
 				control_field_var.register_file.write_rd := '1';
 				control_field_var.register_file.input_mux := rf_alu_output;
-				control_field_var.alu.arithmetic := funct7(5);
+				control_field_var.alu.arithmetic := '0';
 				case funct3 is
 					-- ! add(i), sub
 					when b"000" =>
 						control_field_var.alu.operation := op_add;
+						if opcode(5) = '1' then
+							control_field_var.alu.arithmetic := funct7(5);
+						end if;
 					-- ! slt(i)
 					when b"010" =>
 						control_field_var.alu.operation := op_slt;
@@ -212,6 +220,7 @@ begin
 					--! srl(i) & sra(i)
 					when "101" =>
 						control_field_var.alu.operation := op_srl;
+						control_field_var.alu.arithmetic := funct7(5);
 					when others =>
 						control_field_var := nop;
 				end case;

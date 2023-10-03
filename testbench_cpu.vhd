@@ -42,28 +42,37 @@ ARCHITECTURE behavior OF testbench_cpu IS
     COMPONENT cpu
     PORT(
          clk : IN  std_logic;
-		   neg_clk: in STD_LOGIC;
-         rst : IN  std_logic;
-         address : OUT  std_logic_vector(31 downto 0);
-         data : INOUT  std_logic_vector(31 downto 0);
-         enable : OUT  std_logic;
-         wr : OUT  std_logic
+			  rst : in STD_LOGIC;
+			  address : inout  STD_LOGIC_VECTOR (31 downto 0);
+			  data : inout  STD_LOGIC_VECTOR (31 downto 0);
+			  wr : inout STD_LOGIC_VECTOR(3 downto 0);
+			  rd : inout STD_LOGIC;
+			  ready: inout STD_LOGIC
         );
     END COMPONENT;
-    
-
+   
+	COMPONENT data_cache
+	  port (
+		 clka : IN STD_LOGIC;
+		 wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		 addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+	  );
+	END COMPONENT;
+	
    --Inputs
    signal clk : std_logic := '0';
-   signal neg_clk : std_logic := '0';
    signal rst : std_logic := '0';
 
 	--BiDirs
    signal data : std_logic_vector(31 downto 0);
-
- 	--Outputs
    signal address : std_logic_vector(31 downto 0);
-   signal enable : std_logic;
-   signal wr : std_logic;
+   signal wr : std_logic_vector(3 downto 0);
+   signal rd, ready, rd_ready : std_logic := 'Z';
+
+
+   signal mem_out : std_logic_vector(31 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -72,14 +81,15 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: cpu PORT MAP (
-          clk => clk,
-			 neg_clk => neg_clk,
-          rst => rst,
-          address => address,
-          data => data,
-          enable => enable,
-          wr => wr
-        );
+		 clk => clk,
+		 rst => rst,
+		 address => address,
+		 data => data,
+		 wr => wr,
+		 rd => rd,
+		 ready => ready
+	  );
+
 
    -- Clock process definitions
    clk_process :process
@@ -89,7 +99,25 @@ BEGIN
 		clk <= '1';
 		wait for clk_period/2;
    end process;
-	neg_clk <= not clk;
+
+
+	--! data cache
+	dc1: data_cache port map (
+		clka => clk,
+		wea => wr,
+		addra => address,
+		dina => data,
+		douta => mem_out
+	);
+	data <= mem_out when rd_ready = '1' else (others => 'Z');
+	ready <= rd_ready or wr(0);
+	
+	rd_ready_gen: process (clk)
+	begin
+		if rising_edge(clk) then
+			rd_ready <= rd;
+		end if;
+	end process;
 
    -- Stimulus process
    stim_proc: process
