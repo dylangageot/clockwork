@@ -42,56 +42,28 @@ architecture Behavioral of control_unit is
 begin
 
 	process (opcode, funct3, funct7)
-		variable control_field_var : control_field_t := nop;
+		variable control_field_var : control_field_t;
 	begin
+		--! by default, we set the control field to do nothing
+		control_field_var := nop;
 		case opcode is
-			--! LUI
+			--! lui
 			when B"0110111" =>
-				control_field_var := (
-					program_counter => (
-							write_pc => '0',
-							is_jump => '0',
-							negate_alu_output => '0',
-							address_computation_mux => pc_alu
-					),
-					register_file => (
-						write_rd => '1',
-						input_mux => rf_u
-					),
-					alu => (
-						operation => op_add,
-						arithmetic => '0',
-						port_1 => port_1_rs_1,
-						port_2 => port_2_rs_2
-					),
-					memory => (
-						write_rs_2 => '0',
-						byte_length => none
-					)	
+				control_field_var.register_file := (
+					write_rd => '1',
+					input_mux => rf_u
 				);
-			--! AUIPC
+			--! auipc
 			when B"0010111" =>
-				control_field_var := (
-					program_counter => (
-							write_pc => '0',
-							is_jump => '0',
-							negate_alu_output => '0',
-							address_computation_mux => pc_alu
-					),
-					register_file => (
-						write_rd => '1',
-						input_mux => rf_alu_output
-					),
-					alu => (
-						operation => op_add,
-						arithmetic => '0',
-						port_1 => port_1_pc,
-						port_2 => port_2_u
-					),
-					memory => (
-						write_rs_2 => '0',
-						byte_length => none
-					)	
+				control_field_var.alu := (
+					operation => op_add,
+					arithmetic => '0',
+					port_1 => port_1_pc,
+					port_2 => port_2_u
+				);
+				control_field_var.register_file := (
+					write_rd => '1',
+					input_mux => rf_alu_output
 				);
 			--! JAL (jump and link)
 			when B"1101111" =>
