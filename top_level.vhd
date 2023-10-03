@@ -56,13 +56,26 @@ architecture Behavioral of top_level is
 	 );
 	end component;
 
+	COMPONENT data_cache
+	  PORT (
+		 clka : IN STD_LOGIC;
+		 ena : IN STD_LOGIC;
+		 wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		 addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+	  );
+	END COMPONENT;
+
 	signal clk_40m: std_logic := '0';
 	signal gpio: std_logic_vector (31 downto 0) := (others => '0');
 	signal rd, ready : std_logic := 'Z';
-	signal data, address : std_logic_vector (31 downto 0) := (others => 'Z');
+	signal data, address, previous_address : std_logic_vector (31 downto 0) := (others => 'Z');
 	signal wr : std_logic_vector (3 downto 0) := (others => 'Z');
 
-	signal enable_gpio : std_logic := '0';
+
+   signal mem_out : std_logic_vector(31 downto 0);
+	signal enable_gpio, enable_mem, mem_ready : std_logic := '0';
 
 begin
 	
@@ -88,7 +101,6 @@ begin
 	enable_gpio <= address(31);
 	ready <= '1' when enable_gpio = '1' and (rd = '1' or wr(0) = '1') else 'Z';
 	data <= gpio when enable_gpio = '1' and rd = '1' else (others => 'Z');
-	
 	gpio_gen: process (clk_40m, rst, enable_gpio, wr)
 	begin
 		if rst = '1' then
@@ -98,6 +110,32 @@ begin
 		end if;
 	end process;
 	
+	--! data cache
+	enable_mem <= not(address(31));
+	dc1: data_cache port map (
+		clka => clk_40m,
+		ena => enable_mem,
+		wea => wr,
+		addra => address,
+		dina => data,
+		douta => mem_out
+	);
+	ready <= mem_ready when enable_mem = '1' else 'Z';
+	data <= mem_out when enable_mem = '1' and rd = '1' else (others => 'Z');
+	mem_ready_gen: process (clk_40m, address, wr, enable_mem)
+	begin
+		if wr(0) = '1' then
+			mem_ready <= '1';
+		elsif rising_edge(clk_40m) and enable_mem = '1' then
+			--! might not work as intended
+			previous_address <= address;
+			if previous_address /= address then
+				mem_ready <= '0';
+			else
+				mem_ready <= '1';
+			end if;
+		end if;
+	end process;
 
 end Behavioral;
 
