@@ -73,6 +73,7 @@ architecture Behavioral of cpu is
 	component instruction_cache is
 	  port (
 		 clka : IN STD_LOGIC;
+		 ena : IN STD_LOGIC;
 		 addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	  );
@@ -92,7 +93,7 @@ architecture Behavioral of cpu is
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
 			 alu_output, memory_filter_r
 			 : std_logic_vector(31 downto 0);
-	signal write_rd : std_logic;
+	signal write_rd, enable_pc : std_logic;
 	
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
@@ -109,14 +110,13 @@ architecture Behavioral of cpu is
 	
 begin
 
+	enable_pc <= not(control_field.program_counter.wait_memory and not(ready));
 	--! program counter
-	process (clk, rst, control_field, ready)
+	process (clk, rst, enable_pc)
 	begin
 		if rst = '1' then 
 			pc_output <= X"FFFF_FFFC";
-		elsif rising_edge(clk) and 
-			not((control_field.program_counter.wait_memory = '1' and ready = '0'))
-		then
+		elsif rising_edge(clk) and enable_pc = '1' then
 			pc_output <= next_pc;
 		end if;
 	end process;	
@@ -135,6 +135,7 @@ begin
 	--! instruction cache
 	ic1: instruction_cache port map (
 		clka => clk,
+		ena => enable_pc,
 		addra => next_pc,
 		douta => instruction
 	);
