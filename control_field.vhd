@@ -50,6 +50,29 @@ type control_field_t is record
 	memory : memory_t;
 end record;
 
+constant nop : control_field_t := (
+	program_counter => (
+			write_pc => '0',
+			is_jump => '0',
+			negate_alu_output => '0',
+			address_computation_mux => pc_alu
+	),
+	register_file => (
+		write_rd => '0',
+		input_mux => rf_u
+	),
+	alu => (
+		operation => op_add,
+		arithmetic => '0',
+		port_1 => port_1_rs_1,
+		port_2 => port_2_rs_2
+	),
+	memory => (
+		write_rs_2 => '0',
+		byte_length => none
+	)	
+);
+
 -- Declare constants
 --
 -- constant <constant_name>		: time := <time_unit> ns;

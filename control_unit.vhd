@@ -42,11 +42,12 @@ architecture Behavioral of control_unit is
 begin
 
 	process (opcode, funct3, funct7)
+		variable control_field_var : control_field_t := nop;
 	begin
 		case opcode is
 			--! LUI
 			when B"0110111" =>
-				control_field <= (
+				control_field_var := (
 					program_counter => (
 							write_pc => '0',
 							is_jump => '0',
@@ -70,7 +71,7 @@ begin
 				);
 			--! AUIPC
 			when B"0010111" =>
-				control_field <= (
+				control_field_var := (
 					program_counter => (
 							write_pc => '0',
 							is_jump => '0',
@@ -94,7 +95,7 @@ begin
 				);
 			--! JAL (jump and link)
 			when B"1101111" =>
-				control_field <= (
+				control_field_var := (
 					program_counter => (
 							write_pc => '1',
 							is_jump => '1',
@@ -118,7 +119,7 @@ begin
 				);
 			--! JALR (relative to rs1)
 			when B"1100111" =>
-				control_field <= (
+				control_field_var := (
 					program_counter => (
 							write_pc => '1',
 							is_jump => '1',
@@ -145,7 +146,7 @@ begin
 				case funct3 is
 					--! beq
 					when b"000" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '1',
 									is_jump => '0',
@@ -169,7 +170,7 @@ begin
 						);
 					--! bne
 					when b"001" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '1',
 									is_jump => '0',
@@ -193,7 +194,7 @@ begin
 						);
 					--! blt
 					when b"100" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '1',
 									is_jump => '0',
@@ -217,7 +218,7 @@ begin
 						);
 					--! bge
 					when b"101" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '1',
 									is_jump => '0',
@@ -241,7 +242,7 @@ begin
 						);
 					--! bltu
 					when b"110" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '1',
 									is_jump => '0',
@@ -265,7 +266,7 @@ begin
 						);
 					--! bgeu
 					when b"111" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '1',
 									is_jump => '0',
@@ -288,28 +289,7 @@ begin
 							)	
 						);
 					when others =>
-						control_field <= (
-							program_counter => (
-									write_pc => '0',
-									is_jump => '0',
-									negate_alu_output => '0',
-									address_computation_mux => pc_alu
-							),
-							register_file => (
-								write_rd => '0',
-								input_mux => rf_u
-							),
-							alu => (
-								operation => op_add,
-								arithmetic => '0',
-								port_1 => port_1_rs_1,
-								port_2 => port_2_rs_2
-							),
-							memory => (
-								write_rs_2 => '0',
-								byte_length => none
-							)	
-						);
+						control_field_var := nop;
 				end case;
 				
 			--! load store
@@ -317,7 +297,7 @@ begin
 				case funct3 is
 						--! lb
 						when B"000" =>
-						control_field <= (
+						control_field_var :=   (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -341,7 +321,7 @@ begin
 						);
 						--! lh
 						when B"001" =>
-						control_field <= (
+						control_field_var :=   (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -365,7 +345,7 @@ begin
 						);
 						--! lw
 						when B"010" =>
-						control_field <= (
+						control_field_var :=   (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -389,7 +369,7 @@ begin
 						);
 						--! lbu
 						when B"100" =>
-						control_field <= (
+						control_field_var :=  (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -411,9 +391,9 @@ begin
 								byte_length => byte
 							)	
 						);
-						--! lhu
-						when B"101" =>
-						control_field <= (
+					--! lhu
+					when B"101" =>
+						control_field_var :=  (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -436,28 +416,7 @@ begin
 							)	
 						);
 					when others =>
-						control_field <= (
-							program_counter => (
-									write_pc => '0',
-									is_jump => '0',
-									negate_alu_output => '0',
-									address_computation_mux => pc_alu
-							),
-							register_file => (
-								write_rd => '0',
-								input_mux => rf_u
-							),
-							alu => (
-								operation => op_add,
-								arithmetic => '0',
-								port_1 => port_1_rs_1,
-								port_2 => port_2_rs_2
-							),
-							memory => (
-								write_rs_2 => '0',
-								byte_length => none
-							)	
-						);
+						control_field_var := nop;
 				end case;
 			
 			--! store 
@@ -465,7 +424,7 @@ begin
 				case funct3 is
 						--! sb
 						when B"000" =>
-							control_field <= (
+							control_field_var := (
 								program_counter => (
 										write_pc => '0',
 										is_jump => '0',
@@ -489,7 +448,7 @@ begin
 							);
 						--! sh
 						when B"001" =>
-							control_field <= (
+							control_field_var := (
 								program_counter => (
 										write_pc => '0',
 										is_jump => '0',
@@ -513,7 +472,7 @@ begin
 							);
 						--! sw
 						when B"010" =>
-							control_field <= (
+							control_field_var := (
 								program_counter => (
 										write_pc => '0',
 										is_jump => '0',
@@ -536,35 +495,14 @@ begin
 								)	
 							);
 					when others =>
-						control_field <= (
-							program_counter => (
-									write_pc => '0',
-									is_jump => '0',
-									negate_alu_output => '0',
-									address_computation_mux => pc_alu
-							),
-							register_file => (
-								write_rd => '0',
-								input_mux => rf_u
-							),
-							alu => (
-								operation => op_add,
-								arithmetic => '0',
-								port_1 => port_1_rs_1,
-								port_2 => port_2_rs_2
-							),
-							memory => (
-								write_rs_2 => '0',
-								byte_length => none
-							)	
-						);
+						control_field_var := nop;
 				end case;
 			--! addi, slti...
 			when B"0010011" =>
 				case funct3 is
 					-- ! addi
 					when b"000" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -588,7 +526,7 @@ begin
 						);
 					-- ! slti
 					when b"010" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -612,7 +550,7 @@ begin
 						);
 					-- ! sltui
 					when b"011" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -636,7 +574,7 @@ begin
 						);
 					-- ! xori
 					when b"100" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -660,7 +598,7 @@ begin
 						);
 					-- ! ori
 					when b"110" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -684,7 +622,7 @@ begin
 						);
 					-- ! andi
 					when b"111" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -708,7 +646,7 @@ begin
 						);
 					--! slli
 					when "001" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -732,7 +670,7 @@ begin
 						);
 					--! srli & srai
 					when "101" =>
-							control_field <= (
+							control_field_var := (
 								program_counter => (
 										write_pc => '0',
 										is_jump => '0',
@@ -755,35 +693,14 @@ begin
 								)	
 							);
 					when others =>
-						control_field <= (
-							program_counter => (
-									write_pc => '0',
-									is_jump => '0',
-									negate_alu_output => '0',
-									address_computation_mux => pc_alu
-							),
-							register_file => (
-								write_rd => '0',
-								input_mux => rf_u
-							),
-							alu => (
-								operation => op_add,
-								arithmetic => '0',
-								port_1 => port_1_rs_1,
-								port_2 => port_2_rs_2
-							),
-							memory => (
-								write_rs_2 => '0',
-								byte_length => none
-							)	
-						);
+						control_field_var := nop;
 				end case;
 			--! add, slt...
 			when B"0110011" =>
 				case funct3 is
 					-- ! add or sub
 					when b"000" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -807,7 +724,7 @@ begin
 						);
 					-- ! slt
 					when b"010" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -831,7 +748,7 @@ begin
 						);
 					-- ! sltu
 					when b"011" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -855,7 +772,7 @@ begin
 						);
 					-- ! xor
 					when b"100" =>
-						control_field <= (
+						control_field_var :=  (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -879,7 +796,7 @@ begin
 						);
 					--! or
 					when b"110" =>
-						control_field <= (
+						control_field_var :=  (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -903,7 +820,7 @@ begin
 						);
 					--! and
 					when b"111" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -927,7 +844,7 @@ begin
 						);
 					--! sll
 					when "001" =>
-						control_field <= (
+						control_field_var :=  (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -951,7 +868,7 @@ begin
 						);
 					--! srli & srai
 					when "101" =>
-						control_field <= (
+						control_field_var := (
 							program_counter => (
 									write_pc => '0',
 									is_jump => '0',
@@ -974,53 +891,12 @@ begin
 							)	
 						);
 					when others =>
-						control_field <= (
-							program_counter => (
-									write_pc => '0',
-									is_jump => '0',
-									negate_alu_output => '0',
-									address_computation_mux => pc_alu
-							),
-							register_file => (
-								write_rd => '0',
-								input_mux => rf_u
-							),
-							alu => (
-								operation => op_add,
-								arithmetic => '0',
-								port_1 => port_1_rs_1,
-								port_2 => port_2_rs_2
-							),
-							memory => (
-								write_rs_2 => '0',
-								byte_length => none
-							)	
-						);
+						control_field_var := nop;
 				end case;
 			when others =>
-				control_field <= (
-					program_counter => (
-							write_pc => '0',
-							is_jump => '0',
-							negate_alu_output => '0',
-							address_computation_mux => pc_alu
-					),
-					register_file => (
-						write_rd => '0',
-						input_mux => rf_u
-					),
-					alu => (
-						operation => op_add,
-						arithmetic => '0',
-						port_1 => port_1_rs_1,
-						port_2 => port_2_rs_2
-					),
-					memory => (
-						write_rs_2 => '0',
-						byte_length => none
-					)	
-				);
+				control_field_var := nop;
 			end case;
+			control_field <= control_field_var;
 	end process;
 
 end Behavioral;
