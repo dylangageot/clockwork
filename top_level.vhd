@@ -37,49 +37,67 @@ end top_level;
 
 architecture Behavioral of top_level is
 
-component cpu is
-    Port ( clk : in  STD_LOGIC;
-			  neg_clk: in STD_LOGIC;
-			  rst : in STD_LOGIC;
-           address : out  STD_LOGIC_VECTOR (31 downto 0);
-           data : inout  STD_LOGIC_VECTOR (31 downto 0);
-           enable : out  STD_LOGIC;
-			  wr : out STD_LOGIC
-			 );
-end component;
+	component cpu is
+		 Port ( clk : in  STD_LOGIC;
+				  rst : in STD_LOGIC;
+				  address : inout  STD_LOGIC_VECTOR (31 downto 0);
+				  data : inout  STD_LOGIC_VECTOR (31 downto 0);
+				  wr : inout STD_LOGIC_VECTOR(3 downto 0);
+				  rd : inout STD_LOGIC;
+				  ready: inout STD_LOGIC
+				 );
+	end component;
 
-component neg_clk
-port
- (-- Clock in ports
-  CLK_IN1           : in     std_logic;
-  -- Clock out ports
-  CLK_OUT1          : out    std_logic;
-  CLK_OUT2          : out    std_logic
- );
-end component;
- 
-	signal clk1, neg_clk1: std_logic := '0';
+	component clock_gen
+	port
+	(
+	  CLK_IN1           : in     std_logic;
+	  CLK_OUT1          : out    std_logic
+	 );
+	end component;
+
+	signal clk_40m: std_logic := '0';
 	signal gpio: std_logic_vector (31 downto 0) := (others => '0');
+	signal rd, ready : std_logic := 'Z';
+	signal data, address : std_logic_vector (31 downto 0) := (others => 'Z');
+	signal wr : std_logic_vector (3 downto 0) := (others => 'Z');
+
+	signal enable_gpio : std_logic := '0';
 
 begin
-
-	nc1: neg_clk port map (
-		CLK_IN1 => clk,
-		CLK_OUT1 => clk1,
-		CLK_OUT2 => neg_clk1
-	);
 	
 	cpu1: cpu port map (
-		clk => clk1,
-		neg_clk => neg_clk1,
+		clk => clk_40m,
 		rst => rst,
-		address => gpio,
-		data => open,
-		enable => open,
-		wr => open
+		address => address,
+		data => data,
+		wr => wr,
+		rd => rd,
+		ready => ready
+	);
+	
+	cg1: clock_gen port map (
+		CLK_IN1 => clk,
+		CLK_OUT1 => clk_40m
 	);
 	
 	led <= gpio(7 downto 0);
+
+
+	--! GPIO
+	enable_gpio <= address(31);
+	ready <= '1' when enable_gpio = '1' and (rd = '1' or wr(0) = '1') else 'Z';
+	data <= gpio when enable_gpio = '1' and rd = '1' else (others => 'Z');
+	
+	gpio_gen: process (clk_40m, rst, enable_gpio, wr)
+	begin
+		if rst = '1' then
+			gpio <= (others => '0');
+		elsif rising_edge(clk_40m) and enable_gpio = '1' and wr /= "0000" then
+			gpio <= data;
+		end if;
+	end process;
+	
 
 end Behavioral;
 
