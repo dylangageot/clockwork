@@ -67,10 +67,9 @@ ARCHITECTURE behavior OF testbench_cpu IS
 
 	--BiDirs
    signal data : std_logic_vector(31 downto 0);
-   signal address : std_logic_vector(31 downto 0);
+   signal address, previous_address : std_logic_vector(31 downto 0);
    signal wr : std_logic_vector(3 downto 0);
    signal rd, ready, rd_ready : std_logic := 'Z';
-
 
    signal mem_out : std_logic_vector(31 downto 0);
 
@@ -109,13 +108,13 @@ BEGIN
 		dina => data,
 		douta => mem_out
 	);
-	data <= mem_out when rd_ready = '1' else (others => 'Z');
-	ready <= rd_ready or wr(0);
+	data <= mem_out when rd = '1' else (others => 'Z');
+	ready <= rd when previous_address = address else wr(0);
 	
-	rd_ready_gen: process (clk)
+	rd_ready_gen: process (clk, address)
 	begin
 		if rising_edge(clk) then
-			rd_ready <= rd;
+			previous_address <= address;
 		end if;
 	end process;
 
