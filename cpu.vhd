@@ -126,7 +126,9 @@ begin
 	--! id to ex register
 	id_ex_reg: process (clk, rst, enable, bubble)
 	begin
-		if rst = '1' or bubble = '1' then 
+		if rst = '1' then 
+			id_ex_register <= id_ex_nop;
+		elsif rising_edge(clk)  and bubble = '1' then
 			id_ex_register <= id_ex_nop;
 		elsif rising_edge(clk) and enable = '1' 
 			and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd = a_rs_2)))  
@@ -147,6 +149,8 @@ begin
 			);
 		end if;
 	end process;
+	
+	
 	
 	--! program counter
 	process (clk, rst, enable)
