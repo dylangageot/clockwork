@@ -86,23 +86,49 @@ end record;
 type ex_control_t is record
 	operation: alu_operation_t;
 	arithmetic: std_logic;
-	write_pc : std_logic;
 	is_jump : std_logic;
 	negate_alu_output : std_logic;
 	address_computation_mux : pc_address_computation_mux_t;
+	write_pc : std_logic;
 end record;
 
 type mem_control_t is record
 	byte_length : byte_length_t;
 	read_mem: std_logic;
-	wait_memory: std_logic;
-	write_rs_2: std_logic;
+	wait_mem: std_logic;
+	write_mem: std_logic;
 end record;
 
 type wb_control_t is record
+	rd_input_mux : register_file_input_mux_t;
 	write_rd : std_logic;
-	input_mux : register_file_input_mux_t;
 end record;
+
+constant id_nop: id_control_t := (
+	port_1 => port_1_rs_1,
+	port_2 => port_2_rs_2
+);
+
+constant ex_nop: ex_control_t := (
+	operation => op_add,
+	arithmetic => '0',
+	is_jump => '0',
+	negate_alu_output => '0',
+	address_computation_mux => pc_alu,
+	write_pc => '0'
+);
+
+constant mem_nop : mem_control_t := (
+	byte_length => none,
+	read_mem => '0',
+	wait_mem => '0',
+	write_mem => '0'
+);
+
+constant wb_nop : wb_control_t := (
+	rd_input_mux => rf_alu_output,
+	write_rd => '0'
+);
 
 -- Declare constants
 --
