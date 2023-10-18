@@ -106,6 +106,39 @@ type mem_wb_register_t is record
 	immd_u : std_logic_vector(31 downto 0);
 end record;
 
+constant id_ex_nop : id_ex_register_t := (
+	ex_control => ex_nop,
+	mem_control => mem_nop,
+	wb_control => wb_nop,
+	a_rd => (others => '0'),
+	pc_4 => (others=> '0'),
+	pc_immd_jb => (others=> '0'),
+	rs_2 => (others => '0'),
+	alu_port_1 => (others => '0'),
+	alu_port_2 => (others => '0'),
+	immd_u => (others => '0')
+);
+
+constant ex_mem_nop : ex_mem_register_t := (
+	mem_control => mem_nop,
+	wb_control => wb_nop,
+	a_rd => (others => '0'),
+	pc_4 => (others=> '0'),
+	alu_output => (others=> '0'),
+	rs_2 => (others=> '0'),
+	immd_u => (others=> '0')
+);
+
+constant mem_wb_nop : mem_wb_register_t := (
+	wb_control => wb_nop,
+	a_rd => (others => '0'),
+	mem_output => (others => '0'),
+	pc_4 => (others => '0'),
+	alu_output => (others => '0'),
+	immd_u => (others => '0')
+);
+
+
 -- Declare constants
 --
 -- constant <constant_name>		: time := <time_unit> ns;

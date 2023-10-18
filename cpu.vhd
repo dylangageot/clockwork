@@ -102,8 +102,9 @@ architecture Behavioral of cpu is
 	signal write_rd, enable_pc : std_logic;
 	
 	--! pipeline registers
-	
-	
+	signal id_ex_register : id_ex_register_t := id_ex_nop;
+	signal ex_mem_register : ex_mem_register_t := ex_mem_nop;
+	signal mem_wb_register : mem_wb_register_t := mem_wb_nop;
 	
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
