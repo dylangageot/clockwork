@@ -77,6 +77,33 @@ constant nop : control_field_t := (
 	)	
 );
 
+--! Pipeline version of control vector
+type id_control_t is record
+	port_1: alu_port_1_t;
+	port_2: alu_port_2_t;
+end record;
+
+type ex_control_t is record
+	operation: alu_operation_t;
+	arithmetic: std_logic;
+	write_pc : std_logic;
+	is_jump : std_logic;
+	negate_alu_output : std_logic;
+	address_computation_mux : pc_address_computation_mux_t;
+end record;
+
+type mem_control_t is record
+	byte_length : byte_length_t;
+	read_mem: std_logic;
+	wait_memory: std_logic;
+	write_rs_2: std_logic;
+end record;
+
+type wb_control_t is record
+	write_rd : std_logic;
+	input_mux : register_file_input_mux_t;
+end record;
+
 -- Declare constants
 --
 -- constant <constant_name>		: time := <time_unit> ns;
