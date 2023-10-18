@@ -131,7 +131,7 @@ begin
 		elsif rising_edge(clk)  and bubble = '1' then
 			id_ex_register <= id_ex_nop;
 		elsif rising_edge(clk) and enable = '1' 
-			and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd = a_rs_2)))  
+			and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd  = a_rs_2)))  
 			and (not (ex_mem_register.a_rd = B"00000") and ex_mem_register.wb_control.write_rd = '1' and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
 			and (not (mem_wb_register.a_rd = B"00000") and mem_wb_register.wb_control.write_rd = '1' and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
 		then
