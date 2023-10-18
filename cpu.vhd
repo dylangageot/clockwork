@@ -101,7 +101,8 @@ architecture Behavioral of cpu is
 			 : std_logic_vector(31 downto 0);
 	signal write_rd, enable_pc : std_logic;
 	
-	--! ID - EX
+	--! pipeline registers
+	
 	
 	
 	--! immediate thangs!
