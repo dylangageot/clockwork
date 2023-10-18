@@ -97,9 +97,12 @@ architecture Behavioral of cpu is
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
 	signal pc_output, pc_input, next_pc, instruction,
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
-			 alu_output, memory_filter_r
+			 alu_output, memory_filter_r, pc_immd
 			 : std_logic_vector(31 downto 0);
 	signal write_rd, enable_pc : std_logic;
+	
+	--! ID - EX
+	
 	
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : std_logic_vector(31 downto 0);
@@ -126,10 +129,13 @@ begin
 			pc_output <= next_pc;
 		end if;
 	end process;	
+	with id_control.pc_immd select pc_immd <= 
+		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_immd_j,
+		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_immd_b,
+		X"0000_0000" when others;
 	with ex_control.address_computation_mux select pc_input <=
 		alu_output(31 downto 1) & '0' when pc_alu,
-		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_jump,
-		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_branch,
+		pc_immd when pc_id,
 		X"0000_0000" when others;
 	with ex_control.write_pc and (
 				ex_control.is_jump or 

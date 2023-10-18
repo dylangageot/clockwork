@@ -74,9 +74,10 @@ begin
 				);
 			--! jal (jump and link)
 			when B"1101111" =>
+				id_control_var.pc_immd := pc_immd_j;
 				ex_control_var.write_pc := '1';
 				ex_control_var.is_jump := '1';
-				ex_control_var.address_computation_mux := pc_jump;
+				ex_control_var.address_computation_mux := pc_id;
 				wb_control_var := (
 					rd_input_mux => rf_pc_4,
 					write_rd => '1'
@@ -96,10 +97,11 @@ begin
 				);
 			--! branch
 			when B"1100011" =>
+				id_control_var.pc_immd := pc_immd_b;
 				id_control_var.port_1 := port_1_rs_1;
 				id_control_var.port_2 := port_2_rs_2;
 				ex_control_var.write_pc := '1';
-				ex_control_var.address_computation_mux := pc_branch;
+				ex_control_var.address_computation_mux := pc_id;
 				case funct3 is
 					--! beq
 					when b"000" =>
