@@ -98,7 +98,7 @@ architecture Behavioral of cpu is
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
 			 alu_output, memory_filter_r, pc_immd
 			 : std_logic_vector(31 downto 0);
-	signal write_rd, enable, bubble : std_logic;
+	signal write_rd, enable, branch_taken : std_logic;
 	
 	--! pipeline registers
 	signal id_ex_register : id_ex_register_t := id_ex_nop;
@@ -123,34 +123,73 @@ begin
 	--! stall the pipeline if memory has to be waited for and is not yet ready
 	enable <= not(ex_mem_register.mem_control.wait_mem and not(ready));
 
+	branch_taken <= id_ex_register.ex_control.write_pc and (
+				id_ex_register.ex_control.is_jump or 
+				(alu_output(0) xor id_ex_register.ex_control.negate_alu_output));
+				
 	--! id to ex register
-	id_ex_reg: process (clk, rst, enable, bubble)
+	id_ex_reg: process (clk, rst, enable, branch_taken)
 	begin
 		if rst = '1' then 
 			id_ex_register <= id_ex_nop;
-		elsif rising_edge(clk)  and bubble = '1' then
-			id_ex_register <= id_ex_nop;
-		elsif rising_edge(clk) and enable = '1' 
-			and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd  = a_rs_2)))  
-			and (not (ex_mem_register.a_rd = B"00000") and ex_mem_register.wb_control.write_rd = '1' and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
-			and (not (mem_wb_register.a_rd = B"00000") and mem_wb_register.wb_control.write_rd = '1' and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
-		then
-			id_ex_register <= (
-				ex_control => ex_control,
-				mem_control => mem_control,
-				wb_control => wb_control,
-				a_rd => a_rd,
-				pc_4 => std_logic_vector(unsigned(pc_output) + 4),
-				pc_immd_jb => pc_immd,
-				rs_2 => rs_2,
-				alu_port_1 => alu_port_1,
-				alu_port_2 => alu_port_2,
-				immd_u => immd_u
+		elsif rising_edge(clk) then
+			if branch_taken = '1' then
+				id_ex_register <= id_ex_nop;
+			elsif enable = '1' 
+				and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd  = a_rs_2)))  
+				and (not (ex_mem_register.a_rd = B"00000") and ex_mem_register.wb_control.write_rd = '1' and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
+				and (not (mem_wb_register.a_rd = B"00000") and mem_wb_register.wb_control.write_rd = '1' and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
+			then
+				id_ex_register <= (
+					ex_control => ex_control,
+					mem_control => mem_control,
+					wb_control => wb_control,
+					a_rd => a_rd,
+					pc_4 => std_logic_vector(unsigned(pc_output) + 4),
+					pc_immd_jb => pc_immd,
+					rs_2 => rs_2,
+					alu_port_1 => alu_port_1,
+					alu_port_2 => alu_port_2,
+					immd_u => immd_u
+				);
+			end if;
+		end if;
+	end process;
+	
+	--! ex to mem register
+	ex_mem_reg: process (clk, rst, enable)
+	begin
+		if rst = '1' then 
+			ex_mem_register <= ex_mem_nop;
+		elsif rising_edge(clk) and enable = '1' then
+			ex_mem_register <= (
+				mem_control => id_ex_register.mem_control,
+				wb_control => id_ex_register.wb_control,
+				a_rd => id_ex_register.a_rd,
+				pc_4 => id_ex_register.pc_4,
+				alu_output => alu_output,
+				rs_2 => id_ex_register.rs_2,
+				immd_u => id_ex_register.immd_u
 			);
 		end if;
 	end process;
 	
-	
+	--! mem to wb register
+	mem_wb_reg: process (clk, rst, enable)
+	begin
+		if rst = '1' then 
+			mem_wb_register <= mem_wb_nop;
+		elsif rising_edge(clk) and enable = '1' then
+			mem_wb_register <= (
+				wb_control => ex_mem_register.wb_control,
+				a_rd => ex_mem_register.a_rd,
+				mem_output => data,
+				pc_4 => ex_mem_register.pc_4,
+				alu_output => ex_mem_register.alu_output,
+				immd_u => ex_mem_register.immd_u
+			);
+		end if;
+	end process;
 	
 	--! program counter
 	process (clk, rst, enable)
@@ -169,10 +208,7 @@ begin
 		alu_output(31 downto 1) & '0' when pc_alu,
 		id_ex_register.pc_immd_jb when pc_id,
 		X"0000_0000" when others;
-	with id_ex_register.ex_control.write_pc and (
-				id_ex_register.ex_control.is_jump or 
-				(alu_output(0) xor id_ex_register.ex_control.negate_alu_output)
-	) select next_pc <=
+	with branch_taken select next_pc <=
 		pc_input when '1',
 		std_logic_vector(unsigned(pc_output) + 4) when '0';
 
