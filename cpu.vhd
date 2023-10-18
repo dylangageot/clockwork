@@ -42,12 +42,11 @@ architecture Behavioral of cpu is
 
 	component alu is
 		 Port ( operation: alu_operation_t;
-				  arithmetic : in STD_LOGIC;
-				  input_1 : in  STD_LOGIC_VECTOR (31 downto 0);
-				  input_2 : in  STD_LOGIC_VECTOR (31 downto 0);
-				  output : out  STD_LOGIC_VECTOR (31 downto 0));
+			  arithmetic : in STD_LOGIC;
+			  input_1 : in  STD_LOGIC_VECTOR (31 downto 0);
+			  input_2 : in  STD_LOGIC_VECTOR (31 downto 0);
+			  output : out  STD_LOGIC_VECTOR (31 downto 0));
 	end component;
-	
 	
 	component program_counter is
     Port ( clk : in  STD_LOGIC;
@@ -99,7 +98,7 @@ architecture Behavioral of cpu is
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
 			 alu_output, memory_filter_r, pc_immd
 			 : std_logic_vector(31 downto 0);
-	signal write_rd, enable_pc : std_logic;
+	signal write_rd, enable, bubble : std_logic;
 	
 	--! pipeline registers
 	signal id_ex_register : id_ex_register_t := id_ex_nop;
@@ -116,18 +115,45 @@ architecture Behavioral of cpu is
 	alias a_rs_2 is instruction(24 downto 20);
 	alias a_rd is instruction(11 downto 7);
 	
-	alias memory_out_byte is data(7 downto 0);
-	alias memory_out_half is data(15 downto 0);
+	alias memory_out_byte is mem_wb_register.mem_output(7 downto 0);
+	alias memory_out_half is mem_wb_register.mem_output(15 downto 0);
 	
 begin
 
-	enable_pc <= not(mem_control.wait_mem and not(ready));
+	--! stall the pipeline if memory has to be waited for and is not yet ready
+	enable <= not(ex_mem_register.mem_control.wait_mem and not(ready));
+
+	--! id to ex register
+	id_ex_reg: process (clk, rst, enable, bubble)
+	begin
+		if rst = '1' or bubble = '1' then 
+			id_ex_register <= id_ex_nop;
+		elsif rising_edge(clk) and enable = '1' 
+			and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd = a_rs_2)))  
+			and (not (ex_mem_register.a_rd = B"00000") and ex_mem_register.wb_control.write_rd = '1' and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
+			and (not (mem_wb_register.a_rd = B"00000") and mem_wb_register.wb_control.write_rd = '1' and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
+		then
+			id_ex_register <= (
+				ex_control => ex_control,
+				mem_control => mem_control,
+				wb_control => wb_control,
+				a_rd => a_rd,
+				pc_4 => std_logic_vector(unsigned(pc_output) + 4),
+				pc_immd_jb => pc_immd,
+				rs_2 => rs_2,
+				alu_port_1 => alu_port_1,
+				alu_port_2 => alu_port_2,
+				immd_u => immd_u
+			);
+		end if;
+	end process;
+	
 	--! program counter
-	process (clk, rst, enable_pc)
+	process (clk, rst, enable)
 	begin
 		if rst = '1' then 
 			pc_output <= X"FFFF_FFFC";
-		elsif rising_edge(clk) and enable_pc = '1' then
+		elsif rising_edge(clk) and enable = '1' then
 			pc_output <= next_pc;
 		end if;
 	end process;	
@@ -135,13 +161,13 @@ begin
 		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_immd_j,
 		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_immd_b,
 		X"0000_0000" when others;
-	with ex_control.address_computation_mux select pc_input <=
+	with id_ex_register.ex_control.address_computation_mux select pc_input <=
 		alu_output(31 downto 1) & '0' when pc_alu,
-		pc_immd when pc_id,
+		id_ex_register.pc_immd_jb when pc_id,
 		X"0000_0000" when others;
-	with ex_control.write_pc and (
-				ex_control.is_jump or 
-				(alu_output(0) xor ex_control.negate_alu_output)
+	with id_ex_register.ex_control.write_pc and (
+				id_ex_register.ex_control.is_jump or 
+				(alu_output(0) xor id_ex_register.ex_control.negate_alu_output)
 	) select next_pc <=
 		pc_input when '1',
 		std_logic_vector(unsigned(pc_output) + 4) when '0';
@@ -149,7 +175,7 @@ begin
 	--! instruction cache
 	ic1: instruction_cache port map (
 		clka => clk,
-		ena => enable_pc,
+		ena => enable,
 		addra => next_pc,
 		douta => instruction
 	);
@@ -188,25 +214,25 @@ begin
 		os2 => rs_2
 	);
 	--! write back if write rd is set and that if reading from memory is ready
-	write_rd <= wb_control.write_rd and not(mem_control.wait_mem and not(ready));
+	write_rd <= mem_wb_register.wb_control.write_rd and not(ex_mem_register.mem_control.wait_mem and not(ready));
 	--! write back input mux
-	with wb_control.rd_input_mux select rf_input <=
-		alu_output when rf_alu_output,
+	with mem_wb_register.wb_control.rd_input_mux select rf_input <=
+		mem_wb_register.alu_output when rf_alu_output,
 		std_logic_vector(resize(signed(memory_out_byte), 32)) when rf_mem_byte,
 		std_logic_vector(resize(unsigned(memory_out_byte), 32)) when rf_mem_unsigned_byte,
 		std_logic_vector(resize(signed(memory_out_half), 32)) when rf_mem_half,
 		std_logic_vector(resize(unsigned(memory_out_half), 32)) when rf_mem_unsigned_half,
-		data when rf_mem_word,
-		std_logic_vector(unsigned(pc_output) + 4) when rf_pc_4,
-		immd_u when rf_u,
+		mem_wb_register.mem_output when rf_mem_word,
+		mem_wb_register.pc_4 when rf_pc_4,
+		mem_wb_register.immd_u when rf_u,
 		X"0000_0000" when others;
 
 	--! alu
 	alu1: alu port map (
-		operation => ex_control.operation,
-		arithmetic => ex_control.arithmetic,
-		input_1 => alu_port_1,
-		input_2 => alu_port_2,
+		operation => id_ex_register.ex_control.operation,
+		arithmetic => id_ex_register.ex_control.arithmetic,
+		input_1 => id_ex_register.alu_port_1,
+		input_2 => id_ex_register.alu_port_2,
 		output => alu_output
 	);
 	--! alu port 1 mux
@@ -222,18 +248,18 @@ begin
 		immd_u when port_2_u,
 		X"0000_0000" when others;
 
-	with mem_control.byte_length select memory_filter_w <=
+	with ex_mem_register.mem_control.byte_length select memory_filter_w <=
 		"1111" when word,
 		"0011" when half,
 		"0001" when byte,
 		"0000" when others;
-	with mem_control.write_mem select wr <=
+	with ex_mem_register.mem_control.write_mem select wr <=
 		memory_filter_w when '1',
 		"0000" when others;
 	
 	address <= alu_output;
-	data <= rs_2 when mem_control.write_mem = '1' else (others => 'Z');
-	rd <= '1' when mem_control.read_mem = '1' else '0';
+	data <= rs_2 when ex_mem_register.mem_control.write_mem = '1' else (others => 'Z');
+	rd <= '1' when ex_mem_register.mem_control.read_mem = '1' else '0';
 	ready <= 'Z';
 	
 end Behavioral;
