@@ -98,7 +98,7 @@ architecture Behavioral of cpu is
 			 rf_input, rs_1, rs_2, immd, alu_port_1, alu_port_2, 
 			 alu_output, memory_filter_r, pc_immd
 			 : std_logic_vector(31 downto 0);
-	signal write_rd, enable, branch_taken : std_logic;
+	signal write_rd, enable, enable_if, branch_taken, raw : std_logic;
 	
 	--! pipeline registers
 	signal id_ex_register : id_ex_register_t := id_ex_nop;
@@ -122,10 +122,24 @@ begin
 
 	--! stall the pipeline if memory has to be waited for and is not yet ready
 	enable <= not(ex_mem_register.mem_control.wait_mem and not(ready));
-
+	enable_if <= enable and not raw;
+	
 	branch_taken <= id_ex_register.ex_control.write_pc and (
 				id_ex_register.ex_control.is_jump or 
 				(alu_output(0) xor id_ex_register.ex_control.negate_alu_output));
+				
+	raw_gen: process (clk, id_ex_register, ex_mem_register, mem_wb_register, instruction)
+	begin
+		if 
+			(not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd  = a_rs_2)))  
+			or (not (ex_mem_register.a_rd = B"00000") and ex_mem_register.wb_control.write_rd = '1' and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
+			or (not (mem_wb_register.a_rd = B"00000") and mem_wb_register.wb_control.write_rd = '1' and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
+		then 
+			raw <= '1';
+		else
+			raw <= '0';
+		end if;
+	end process;
 				
 	--! id to ex register
 	id_ex_reg: process (clk, rst, enable, branch_taken)
@@ -133,13 +147,9 @@ begin
 		if rst = '1' then 
 			id_ex_register <= id_ex_nop;
 		elsif rising_edge(clk) then
-			if branch_taken = '1' then
+			if branch_taken = '1' or raw = '1' then
 				id_ex_register <= id_ex_nop;
-			elsif enable = '1' 
-				and (not (id_ex_register.a_rd  = B"00000") and  id_ex_register.wb_control.write_rd = '1' and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd  = a_rs_2)))  
-				and (not (ex_mem_register.a_rd = B"00000") and ex_mem_register.wb_control.write_rd = '1' and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
-				and (not (mem_wb_register.a_rd = B"00000") and mem_wb_register.wb_control.write_rd = '1' and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
-			then
+			elsif enable = '1' then
 				id_ex_register <= (
 					ex_control => ex_control,
 					mem_control => mem_control,
@@ -192,11 +202,11 @@ begin
 	end process;
 	
 	--! program counter
-	process (clk, rst, enable)
+	process (clk, rst, enable_if)
 	begin
 		if rst = '1' then 
 			pc_output <= X"FFFF_FFFC";
-		elsif rising_edge(clk) and enable = '1' then
+		elsif rising_edge(clk) and enable_if = '1' then
 			pc_output <= next_pc;
 		end if;
 	end process;	
@@ -215,7 +225,7 @@ begin
 	--! instruction cache
 	ic1: instruction_cache port map (
 		clka => clk,
-		ena => enable,
+		ena => enable_if,
 		addra => next_pc,
 		douta => instruction
 	);
@@ -248,13 +258,13 @@ begin
 		wr => write_rd,
 		rs1 => a_rs_1,
 		rs2 => a_rs_2,
-		rd => a_rd,
+		rd => mem_wb_register.a_rd,
 		id => rf_input,
 		os1 => rs_1,
 		os2 => rs_2
 	);
 	--! write back if write rd is set and that if reading from memory is ready
-	write_rd <= mem_wb_register.wb_control.write_rd and not(ex_mem_register.mem_control.wait_mem and not(ready));
+	write_rd <= mem_wb_register.wb_control.write_rd and enable;
 	--! write back input mux
 	with mem_wb_register.wb_control.rd_input_mux select rf_input <=
 		mem_wb_register.alu_output when rf_alu_output,
@@ -297,8 +307,8 @@ begin
 		memory_filter_w when '1',
 		"0000" when others;
 	
-	address <= alu_output;
-	data <= rs_2 when ex_mem_register.mem_control.write_mem = '1' else (others => 'Z');
+	address <= ex_mem_register.alu_output;
+	data <= ex_mem_register.rs_2 when ex_mem_register.mem_control.write_mem = '1' else (others => 'Z');
 	rd <= '1' when ex_mem_register.mem_control.read_mem = '1' else '0';
 	ready <= 'Z';
 	

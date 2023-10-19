@@ -73,7 +73,6 @@ architecture Behavioral of top_level is
 	signal data, address, previous_address : std_logic_vector (31 downto 0) := (others => 'Z');
 	signal wr : std_logic_vector (3 downto 0) := (others => 'Z');
 
-
    signal mem_out : std_logic_vector(31 downto 0);
 	signal enable_gpio, enable_mem, mem_ready : std_logic := '0';
 
@@ -95,7 +94,6 @@ begin
 	);
 	
 	led <= gpio(7 downto 0);
-
 
 	--! GPIO
 	enable_gpio <= address(31);
@@ -120,22 +118,29 @@ begin
 		dina => data,
 		douta => mem_out
 	);
-	ready <= mem_ready when enable_mem = '1' else 'Z';
+	
+	ready <= mem_ready when enable_mem = '1' and (wr(0) = '1' or rd = '1') else 'Z';
 	data <= mem_out when enable_mem = '1' and rd = '1' else (others => 'Z');
-	mem_ready_gen: process (clk_40m, address, wr, enable_mem)
+	
+	mem_ready_gen: process (wr, rd, address, previous_address)
 	begin
 		if wr(0) = '1' then
 			mem_ready <= '1';
-		elsif rising_edge(clk_40m) and enable_mem = '1' then
-			--! might not work as intended
-			previous_address <= address;
-			if previous_address /= address then
-				mem_ready <= '0';
-			else
-				mem_ready <= '1';
-			end if;
+		elsif rd = '1' and previous_address = address then
+			mem_ready <= '1';
+		else
+			mem_ready <= '0';
 		end if;
 	end process;
+	--! the memory shall throw a non-ready state once a new address is requested
+	previous_address_gen: process (clk_40m, address, wr, enable_mem)
+	begin
+		if rising_edge(clk_40m) and enable_mem = '1' then
+			previous_address <= address;
+		end if;
+	end process;
+	
+	
 
 end Behavioral;
 
