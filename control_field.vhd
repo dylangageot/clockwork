@@ -21,6 +21,8 @@ type alu_port_2_t is (port_2_rs_2, port_2_i, port_2_s, port_2_u);
 type register_file_input_mux_t is (rf_mem_byte, rf_mem_unsigned_byte, rf_mem_half, rf_mem_unsigned_half, rf_mem_word, rf_alu_output, rf_pc_4, rf_u);
 
 type id_control_t is record
+	read_rs1 : std_logic;
+	read_rs2 : std_logic;
 	pc_immd : pc_immd_t;
 	port_1: alu_port_1_t;
 	port_2: alu_port_2_t;
@@ -48,6 +50,8 @@ type wb_control_t is record
 end record;
 
 constant id_nop: id_control_t := (
+	read_rs1 => '0',
+	read_rs2 => '0',
 	pc_immd => pc_immd_j,
 	port_1 => port_1_rs_1,
 	port_2 => port_2_rs_2

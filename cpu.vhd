@@ -209,18 +209,18 @@ begin
 		immd_u when port_2_u,
 		X"0000_0000" when others;
 		
-	raw_gen: process (clk, id_ex_register, ex_mem_register,
+	raw_gen: process (clk, id_control, id_ex_register, ex_mem_register,
 							mem_wb_register, instruction)
 	begin
 		if (not (id_ex_register.a_rd  = B"00000") and 
 			id_ex_register.wb_control.write_rd = '1' 
-			and  ((id_ex_register.a_rd = a_rs_1) or (id_ex_register.a_rd  = a_rs_2)))  
+			and  ((id_ex_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') or (id_ex_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
 		or (not (ex_mem_register.a_rd = B"00000") and 
 			ex_mem_register.wb_control.write_rd = '1' 
-			and ((ex_mem_register.a_rd = a_rs_1) or (ex_mem_register.a_rd = a_rs_2))) 
+			and  ((ex_mem_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') or (ex_mem_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
 		or (not (mem_wb_register.a_rd = B"00000") and 
 			mem_wb_register.wb_control.write_rd = '1' 
-			and ((mem_wb_register.a_rd = a_rs_1) or (mem_wb_register.a_rd = a_rs_2)))
+			and  ((mem_wb_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') or (mem_wb_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
 		then 
 			raw <= '1';
 		else

@@ -84,6 +84,7 @@ begin
 				);
 			--! jalr (relative to rs1)
 			when B"1100111" =>
+				id_control_var.read_rs1 := '1';
 				id_control_var.port_1 := port_1_rs_1;
 				id_control_var.port_2 := port_2_i;
 				ex_control_var.write_pc := '1';
@@ -97,6 +98,8 @@ begin
 				);
 			--! branch
 			when B"1100011" =>
+				id_control_var.read_rs1 := '1';
+				id_control_var.read_rs2 := '1';
 				id_control_var.pc_immd := pc_immd_b;
 				id_control_var.port_1 := port_1_rs_1;
 				id_control_var.port_2 := port_2_rs_2;
@@ -132,6 +135,7 @@ begin
 				end case;
 			--! load
 			when B"0000011" =>
+				id_control_var.read_rs1 := '1';
 				id_control_var.port_1 := port_1_rs_1;
 				id_control_var.port_2 := port_2_i;
 				ex_control_var.operation := op_add;
@@ -160,6 +164,8 @@ begin
 				end case;
 			--! store 
 			when B"0100011" =>
+				id_control_var.read_rs1 := '1';
+				id_control_var.read_rs2 := '1';
 				id_control_var.port_1 := port_1_rs_1;
 				id_control_var.port_2 := port_2_s;
 				ex_control_var.operation := op_add;
@@ -182,9 +188,12 @@ begin
 			--! add(i), slt(i)...
 			when B"0010011" | B"0110011" =>
 				if opcode(5) = '1' then
+					id_control_var.read_rs1 := '1';
+					id_control_var.read_rs2 := '1';
 					id_control_var.port_1 := port_1_rs_1;
 					id_control_var.port_2 := port_2_rs_2;
 				else
+					id_control_var.read_rs1 := '1';
 					id_control_var.port_1 := port_1_rs_1;
 					id_control_var.port_2 := port_2_i;
 				end if;
