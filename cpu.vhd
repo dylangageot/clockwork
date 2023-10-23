@@ -214,13 +214,16 @@ begin
 	begin
 		if (not (id_ex_register.a_rd  = B"00000") and 
 			id_ex_register.wb_control.write_rd = '1' 
-			and  ((id_ex_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') or (id_ex_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
+			and  ((id_ex_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') 
+				or (id_ex_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
 		or (not (ex_mem_register.a_rd = B"00000") and 
 			ex_mem_register.wb_control.write_rd = '1' 
-			and  ((ex_mem_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') or (ex_mem_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
+			and  ((ex_mem_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') 
+				or (ex_mem_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
 		or (not (mem_wb_register.a_rd = B"00000") and 
 			mem_wb_register.wb_control.write_rd = '1' 
-			and  ((mem_wb_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') or (mem_wb_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
+			and  ((mem_wb_register.a_rd = a_rs_1 and id_control.read_rs1 = '1') 
+				or (mem_wb_register.a_rd  = a_rs_2 and id_control.read_rs2 = '1')))  
 		then 
 			raw <= '1';
 		else
