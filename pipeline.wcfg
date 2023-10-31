@@ -16,7 +16,7 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="20" />
+   <WVObjectSize size="23" />
    <wave_markers>
       <marker time="105000000" label="" />
       <marker time="265000000" label="" />
@@ -30,20 +30,6 @@
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
    </wvobject>
-   <wvobject fp_name="/testbench_cpu/data" type="array" db_ref_id="1">
-      <obj_property name="ElementShortName">data[31:0]</obj_property>
-      <obj_property name="ObjectShortName">data[31:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/testbench_cpu/address" type="array" db_ref_id="1">
-      <obj_property name="ElementShortName">address[31:0]</obj_property>
-      <obj_property name="ObjectShortName">address[31:0]</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/testbench_cpu/wr" type="array" db_ref_id="1">
-      <obj_property name="ElementShortName">wr[3:0]</obj_property>
-      <obj_property name="ObjectShortName">wr[3:0]</obj_property>
-   </wvobject>
    <wvobject fp_name="divider61" type="divider">
       <obj_property name="label">program counter</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -55,9 +41,9 @@
       <obj_property name="ObjectShortName">pc_output[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/testbench_cpu/uut/instruction" type="array" db_ref_id="1">
-      <obj_property name="ElementShortName">instruction[31:0]</obj_property>
-      <obj_property name="ObjectShortName">instruction[31:0]</obj_property>
+   <wvobject fp_name="/testbench_cpu/idata" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">idata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">idata[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="divider62" type="divider">
@@ -65,6 +51,24 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#008080</obj_property>
       <obj_property name="TextColor">230 230 230</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/if_id_register.pc" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">.pc</obj_property>
+      <obj_property name="ObjectShortName">if_id_register.pc</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/if_id_register.instruction" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">.instruction</obj_property>
+      <obj_property name="ObjectShortName">if_id_register.instruction</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/cu1/opcode" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">opcode[6:0]</obj_property>
+      <obj_property name="ObjectShortName">opcode[6:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/cu1/funct3" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">funct3[2:0]</obj_property>
+      <obj_property name="ObjectShortName">funct3[2:0]</obj_property>
    </wvobject>
    <wvobject fp_name="group67" type="group">
       <obj_property name="label">decoded instruction</obj_property>
@@ -212,16 +216,6 @@
       <obj_property name="BkColor">#8080ff</obj_property>
       <obj_property name="TextColor">230 230 230</obj_property>
    </wvobject>
-   <wvobject fp_name="/testbench_cpu/ready" type="logic" db_ref_id="1">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">ready</obj_property>
-      <obj_property name="ObjectShortName">ready</obj_property>
-      <obj_property name="label">ready</obj_property>
-   </wvobject>
-   <wvobject fp_name="/testbench_cpu/rd" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">rd</obj_property>
-      <obj_property name="ObjectShortName">rd</obj_property>
-   </wvobject>
    <wvobject fp_name="/testbench_cpu/mem_ready" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">mem_ready</obj_property>
       <obj_property name="ObjectShortName">mem_ready</obj_property>
@@ -239,5 +233,21 @@
       <obj_property name="ElementShortName">[4]</obj_property>
       <obj_property name="ObjectShortName">register_file[4]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/iready" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">iready</obj_property>
+      <obj_property name="ObjectShortName">iready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/raw" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">raw</obj_property>
+      <obj_property name="ObjectShortName">raw</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/branch_taken" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">branch_taken</obj_property>
+      <obj_property name="ObjectShortName">branch_taken</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/uut/mem_stall" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">mem_stall</obj_property>
+      <obj_property name="ObjectShortName">mem_stall</obj_property>
    </wvobject>
 </wave_config>
