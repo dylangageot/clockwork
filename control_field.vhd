@@ -78,6 +78,12 @@ constant wb_nop : wb_control_t := (
 	write_rd => '0'
 );
 
+type if_id_register_t is record
+	instruction : std_logic_vector(31 downto 0);
+	pc : std_logic_vector(31 downto 0);
+	pc_4 : std_logic_vector(31 downto 0);
+end record;
+
 type id_ex_register_t is record
 	ex_control : ex_control_t;
 	mem_control : mem_control_t;
@@ -109,6 +115,12 @@ type mem_wb_register_t is record
 	alu_output : std_logic_vector(31 downto 0);
 	immd_u : std_logic_vector(31 downto 0);
 end record;
+
+constant if_id_nop : if_id_register_t := (
+	instruction => (others => '0'),
+	pc => (others => '0'),
+	pc_4 => (others => '0')
+);
 
 constant id_ex_nop : id_ex_register_t := (
 	ex_control => ex_nop,

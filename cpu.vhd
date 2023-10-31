@@ -26,11 +26,15 @@ entity cpu is
 	Port ( 
 		clk : in  STD_LOGIC;
 		rst : in STD_LOGIC;
-		address : inout  STD_LOGIC_VECTOR (31 downto 0);
-		data : inout  STD_LOGIC_VECTOR (31 downto 0);
-		wr : inout STD_LOGIC_VECTOR(3 downto 0);
-		rd : inout STD_LOGIC;
-		ready: inout STD_LOGIC
+		enable : in STD_LOGIC;
+		daddress : inout  STD_LOGIC_VECTOR (31 downto 0);
+		ddata : inout  STD_LOGIC_VECTOR (31 downto 0);
+		dwr : inout STD_LOGIC_VECTOR(3 downto 0);
+		drd : inout STD_LOGIC;
+		dready: inout STD_LOGIC;
+		iaddress : out STD_LOGIC_VECTOR (31 downto 0);
+		idata : in STD_LOGIC_VECTOR (31 downto 0);
+		iready: in STD_LOGIC
 	);
 end cpu;
 
@@ -98,13 +102,14 @@ architecture Behavioral of cpu is
 	signal mem_control : mem_control_t := mem_nop;
 	signal wb_control : wb_control_t := wb_nop;
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
-	signal pc_output, pc_input, next_pc, instruction,
-			 rf_input, rs_1, rs_2, alu_port_1, alu_port_2, 
-			 alu_output, memory_filter_r, pc_immd
+	signal pc_output, pc_input, next_pc, pc_4, 
+			 rf_input, rs_1, rs_2, alu_port_1, 
+			 alu_port_2, alu_output, memory_filter_r, pc_immd
 			 : std_logic_vector(31 downto 0);
-	signal write_rd, enable, enable_if, branch_taken, raw : std_logic;
+	signal mem_stall, branch_taken, raw : std_logic;
 	
 	--! pipeline registers
+	signal if_id_register : if_id_register_t := if_id_nop;
 	signal id_ex_register : id_ex_register_t := id_ex_nop;
 	signal ex_mem_register : ex_mem_register_t := ex_mem_nop;
 	signal mem_wb_register : mem_wb_register_t := mem_wb_nop;
@@ -112,7 +117,8 @@ architecture Behavioral of cpu is
 	--! immediate thangs!
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : 
 															std_logic_vector(31 downto 0);
-	
+									
+	alias instruction is if_id_register.instruction;
 	alias opcode is instruction(6 downto 0); 
 	alias funct3 is instruction(14 downto 12);
 	alias funct7 is instruction(31 downto 25);
@@ -126,31 +132,43 @@ architecture Behavioral of cpu is
 begin
 
 	--! INSTRUCTION FETCH ------------------------------------------------------
-	
-	enable <= not(ex_mem_register.mem_control.wait_mem and not(ready));
-	enable_if <= enable and not raw;
-	
-	with branch_taken select next_pc <=
+
+	pc_4 <= std_logic_vector(unsigned(pc_output) + 4);
+
+	with branch_taken select next_pc <=                            
 		pc_input when '1',
-		std_logic_vector(unsigned(pc_output) + 4) when '0';
+		pc_4 when '0';
 		
 	--! program counter
-	process (clk, rst, enable_if)
+	process (clk, rst, enable, iready, raw, mem_stall)
 	begin
-		if rst = '1' then 
-			pc_output <= X"FFFF_FFFC";
-		elsif rising_edge(clk) and enable_if = '1' then
+		if rst = '1' then
+			pc_output <= (others => '0');
+		elsif rising_edge(clk) and enable = '1' and 
+				iready = '1' and raw = '0' and mem_stall = '0' then
 			pc_output <= next_pc;
 		end if;
 	end process;	
 	
-	--! instruction cache
-	ic1: instruction_cache port map (
-		clka => clk,
-		ena => enable_if,
-		addra => next_pc,
-		douta => instruction
-	);
+	iaddress <= pc_output;
+	
+	--! if to id register
+	if_id_reg: process (clk, rst, enable, raw, mem_stall)
+	begin
+		if rst = '1' then 
+			if_id_register <= if_id_nop;
+		elsif rising_edge(clk) and enable = '1' and raw = '0' and mem_stall = '0' then
+			if branch_taken = '1' or iready = '0' then
+				if_id_register <= if_id_nop;
+			else
+				if_id_register <= (
+					instruction => idata,
+					pc => pc_output,
+					pc_4 => pc_4
+				);
+			end if;
+		end if;
+	end process;
 
 	--! INSTRUCTION DECODE -----------------------------------------------------
 	
@@ -179,14 +197,14 @@ begin
 						instruction(30 downto 21) & '0'), immd_j'length));
 	
 	with id_control.pc_immd select pc_immd <= 
-		std_logic_vector(signed(pc_output) + signed(immd_j)) when pc_immd_j,
-		std_logic_vector(signed(pc_output) + signed(immd_b)) when pc_immd_b,
+		std_logic_vector(signed(if_id_register.pc) + signed(immd_j)) when pc_immd_j,
+		std_logic_vector(signed(if_id_register.pc) + signed(immd_b)) when pc_immd_b,
 		X"0000_0000" when others;
 	
 	--! register file
 	rf1: register_file port map (
 		clk => clk,
-		wr => write_rd,
+		wr => mem_wb_register.wb_control.write_rd,
 		rs1 => a_rs_1,
 		rs2 => a_rs_2,
 		rd => mem_wb_register.a_rd,
@@ -209,7 +227,7 @@ begin
 		immd_u when port_2_u,
 		X"0000_0000" when others;
 		
-	raw_gen: process (clk, id_control, id_ex_register, ex_mem_register,
+	raw_gen: process (clk, if_id_register, id_control, id_ex_register, ex_mem_register,
 							mem_wb_register, instruction)
 	begin
 		if (not (id_ex_register.a_rd  = B"00000") and 
@@ -232,20 +250,20 @@ begin
 	end process;
 	
 	--! id to ex register
-	id_ex_reg: process (clk, rst, enable, branch_taken)
+	id_ex_reg: process (clk, rst, enable, branch_taken, mem_stall)
 	begin
 		if rst = '1' then 
 			id_ex_register <= id_ex_nop;
-		elsif rising_edge(clk) then
+		elsif rising_edge(clk) and enable = '1' and mem_stall = '0' then
 			if branch_taken = '1' or raw = '1' then
 				id_ex_register <= id_ex_nop;
-			elsif enable = '1' then
+			else
 				id_ex_register <= (
 					ex_control => ex_control,
 					mem_control => mem_control,
 					wb_control => wb_control,
 					a_rd => a_rd,
-					pc_4 => std_logic_vector(unsigned(pc_output) + 4),
+					pc_4 => if_id_register.pc_4,
 					pc_immd_jb => pc_immd,
 					rs_2 => rs_2,
 					alu_port_1 => alu_port_1,
@@ -277,11 +295,11 @@ begin
 		X"0000_0000" when others;
 	
 	--! ex to mem register
-	ex_mem_reg: process (clk, rst, enable)
+	ex_mem_reg: process (clk, rst, enable, mem_stall)
 	begin
 		if rst = '1' then 
 			ex_mem_register <= ex_mem_nop;
-		elsif rising_edge(clk) and enable = '1' then
+		elsif rising_edge(clk) and enable = '1' and mem_stall = '0' then
 			ex_mem_register <= (
 				mem_control => id_ex_register.mem_control,
 				wb_control => id_ex_register.wb_control,
@@ -296,20 +314,22 @@ begin
 	
 	--! MEMORY -----------------------------------------------------------------
 
+	mem_stall <= ex_mem_register.mem_control.wait_mem and not(dready);
+
 	with ex_mem_register.mem_control.byte_length select memory_filter_w <=
 		"1111" when word,
 		"0011" when half,
 		"0001" when byte,
 		"0000" when others;
-	with ex_mem_register.mem_control.write_mem select wr <=
+	with ex_mem_register.mem_control.write_mem select dwr <=
 		memory_filter_w when '1',
 		"0000" when others;
 	
-	address <= ex_mem_register.alu_output;
-	data <= ex_mem_register.rs_2 
+	daddress <= ex_mem_register.alu_output;
+	ddata <= ex_mem_register.rs_2 
 		when ex_mem_register.mem_control.write_mem = '1' else (others => 'Z');
-	rd <= '1' when ex_mem_register.mem_control.read_mem = '1' else '0';
-	ready <= 'Z';
+	drd <= '1' when ex_mem_register.mem_control.read_mem = '1' else '0';
+	dready <= 'Z';
 	
 	--! mem to wb register
 	mem_wb_reg: process (clk, rst, enable)
@@ -317,21 +337,22 @@ begin
 		if rst = '1' then 
 			mem_wb_register <= mem_wb_nop;
 		elsif rising_edge(clk) and enable = '1' then
-			mem_wb_register <= (
-				wb_control => ex_mem_register.wb_control,
-				a_rd => ex_mem_register.a_rd,
-				mem_output => data,
-				pc_4 => ex_mem_register.pc_4,
-				alu_output => ex_mem_register.alu_output,
-				immd_u => ex_mem_register.immd_u
-			);
+			if mem_stall = '1' then
+				mem_wb_register <= mem_wb_nop;
+			else
+				mem_wb_register <= (
+					wb_control => ex_mem_register.wb_control,
+					a_rd => ex_mem_register.a_rd,
+					mem_output => ddata,
+					pc_4 => ex_mem_register.pc_4,
+					alu_output => ex_mem_register.alu_output,
+					immd_u => ex_mem_register.immd_u
+				);
+			end if;
 		end if;
 	end process;
 	
 	--! WRITE BACK -------------------------------------------------------------
-	
-	--! write back if write rd is set and that the pipeline is not stalled
-	write_rd <= mem_wb_register.wb_control.write_rd and enable;
 	
 	--! write back input mux
 	with mem_wb_register.wb_control.rd_input_mux select rf_input <=
