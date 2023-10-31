@@ -40,15 +40,19 @@ ARCHITECTURE behavior OF testbench_cpu IS
     -- Component Declaration for the Unit Under Test (UUT)
  
     COMPONENT cpu
-    PORT(
-         clk : IN  std_logic;
-			  rst : in STD_LOGIC;
-			  address : inout  STD_LOGIC_VECTOR (31 downto 0);
-			  data : inout  STD_LOGIC_VECTOR (31 downto 0);
-			  wr : inout STD_LOGIC_VECTOR(3 downto 0);
-			  rd : inout STD_LOGIC;
-			  ready: inout STD_LOGIC
-        );
+		Port ( 
+			clk : in  STD_LOGIC;
+			rst : in STD_LOGIC;
+			enable : in STD_LOGIC;
+			daddress : inout  STD_LOGIC_VECTOR (31 downto 0);
+			ddata : inout  STD_LOGIC_VECTOR (31 downto 0);
+			dwr : inout STD_LOGIC_VECTOR(3 downto 0);
+			drd : inout STD_LOGIC;
+			dready: inout STD_LOGIC;
+			iaddress : out STD_LOGIC_VECTOR (31 downto 0);
+			idata : in STD_LOGIC_VECTOR (31 downto 0);
+			iready: in STD_LOGIC
+		);
     END COMPONENT;
    
 	COMPONENT data_cache
@@ -62,15 +66,28 @@ ARCHITECTURE behavior OF testbench_cpu IS
 	  );
 	END COMPONENT;
 	
+	component instruction_cache is
+		Port (
+			clka : IN STD_LOGIC;
+			ena : IN STD_LOGIC;
+			addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+			douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+		);
+	end component;
+	
    --Inputs
    signal clk : std_logic := '0';
    signal rst : std_logic := '0';
+	signal enable: std_logic := '1';
 
 	--BiDirs
 	signal gpio: std_logic_vector (31 downto 0) := (others => '0');
-	signal rd, ready : std_logic := 'Z';
-	signal data, address, previous_address : std_logic_vector (31 downto 0) := (others => 'Z');
-	signal wr : std_logic_vector (3 downto 0) := (others => 'Z');
+	signal drd, dready : std_logic := 'Z';
+	signal ddata, daddress, previous_daddress : std_logic_vector (31 downto 0) := (others => 'Z');
+	signal dwr : std_logic_vector (3 downto 0) := (others => 'Z');
+	
+	signal idata, iaddress, previous_iaddress : std_logic_vector (31 downto 0) := (others => 'Z');
+	signal iready : std_logic := '0';
 
    signal mem_out : std_logic_vector(31 downto 0);
 	signal enable_gpio, enable_mem, mem_ready : std_logic := '0';
@@ -84,11 +101,15 @@ BEGIN
    uut: cpu PORT MAP (
 		 clk => clk,
 		 rst => rst,
-		 address => address,
-		 data => data,
-		 wr => wr,
-		 rd => rd,
-		 ready => ready
+		 enable => enable,
+		 daddress => daddress,
+		 ddata => ddata,
+		 dwr => dwr,
+		 drd => drd,
+		 dready => dready,
+		 iaddress => iaddress,
+		 idata => idata,
+		 iready => iready
 	  );
 
 
@@ -102,47 +123,73 @@ BEGIN
    end process;
 
 	--! GPIO
-	enable_gpio <= address(31);
-	ready <= '1' when enable_gpio = '1' and (rd = '1' or wr(0) = '1') else 'Z';
-	data <= gpio when enable_gpio = '1' and rd = '1' else (others => 'Z');
-	gpio_gen: process (clk, rst, enable_gpio, wr)
+	enable_gpio <= daddress(31);
+	dready <= '1' when enable_gpio = '1' and (drd = '1' or dwr(0) = '1') else 'Z';
+	ddata <= gpio when enable_gpio = '1' and drd = '1' else (others => 'Z');
+	gpio_gen: process (clk, rst, enable_gpio, dwr)
 	begin
 		if rst = '1' then
 			gpio <= (others => '0');
-		elsif rising_edge(clk) and enable_gpio = '1' and wr /= "0000" then
-			gpio <= data;
+		elsif rising_edge(clk) and enable_gpio = '1' and dwr /= "0000" then
+			gpio <= ddata;
 		end if;
 	end process;
 	
 	--! data cache
-	enable_mem <= not(address(31));
+	enable_mem <= not(daddress(31));
 	dc1: data_cache port map (
 		clka => clk,
 		ena => enable_mem,
-		wea => wr,
-		addra => address,
-		dina => data,
+		wea => dwr,
+		addra => daddress,
+		dina => ddata,
 		douta => mem_out
 	);
 	
-	ready <= mem_ready when enable_mem = '1' and (wr(0) = '1' or rd = '1') else 'Z';
-	data <= mem_out when enable_mem = '1' and rd = '1' else (others => 'Z');
+	dready <= mem_ready when enable_mem = '1' and (dwr(0) = '1' or drd = '1') else 'Z';
+	ddata <= mem_out when enable_mem = '1' and drd = '1' else (others => 'Z');
 	
-	mem_ready_gen: process (wr, rd, address, previous_address)
+	mem_ready_gen: process (dwr, drd, daddress, previous_daddress)
 	begin
-		if wr(0) = '1' then
+		if dwr(0) = '1' then
 			mem_ready <= '1';
-		elsif rd = '1' and previous_address = address then
+		elsif drd = '1' and previous_daddress = daddress then
 			mem_ready <= '1';
 		else
 			mem_ready <= '0';
 		end if;
 	end process;
+	
 	--! the memory shall throw a non-ready state once a new address is requested
-	previous_address_gen: process (clk, address, wr, enable_mem)
+	previous_daddress_gen: process (clk, daddress, dwr, enable_mem)
 	begin
 		if rising_edge(clk) and enable_mem = '1' then
-			previous_address <= address;
+			previous_daddress <= daddress;
+		end if;
+	end process;
+
+	ic1: instruction_cache port map (
+		clka => clk,
+		ena => enable,
+		addra => iaddress,
+		douta => idata
+	);
+	
+	iready_gen: process (iaddress, previous_iaddress)
+	begin
+		if previous_iaddress = iaddress then
+			iready <= '1';
+		else
+			iready <= '0';
+		end if;
+	end process;
+	
+	previous_iaddress_gen: process (rst, clk, iaddress)
+	begin
+		if rst = '1' then
+			previous_iaddress <= (others => '0');
+		elsif rising_edge(clk) then
+			previous_iaddress <= iaddress;
 		end if;
 	end process;
 

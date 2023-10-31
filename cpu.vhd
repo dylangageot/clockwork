@@ -109,6 +109,7 @@ architecture Behavioral of cpu is
 	signal immd_i, immd_s, immd_j, immd_b, immd_u : 
 															std_logic_vector(31 downto 0);
 
+	alias instruction is if_id_register.instruction;
 	alias opcode is if_id_register.instruction(6 downto 0); 
 	alias funct3 is if_id_register.instruction(14 downto 12);
 	alias funct7 is if_id_register.instruction(31 downto 25);
@@ -174,17 +175,17 @@ begin
 	);			
 	
 	--! retrieve immediates from instructions, depending on the type.
-	immd_i <= std_logic_vector(resize(signed(if_id_register.instruction(31 downto 20)), 
+	immd_i <= std_logic_vector(resize(signed(instruction(31 downto 20)), 
 																				immd_i'length));
-	immd_s <= std_logic_vector(resize(signed(if_id_register.instruction(31 downto 25) & 
-												if_id_register.instruction(11 downto 7)), immd_s'length));
-	immd_b <= std_logic_vector(resize(signed(if_id_register.instruction(31) & if_id_register.instruction(7) &
-						if_id_register.instruction(30 downto 25) & if_id_register.instruction(11 downto 8) & '0'),
+	immd_s <= std_logic_vector(resize(signed(instruction(31 downto 25) & 
+												instruction(11 downto 7)), immd_s'length));
+	immd_b <= std_logic_vector(resize(signed(instruction(31) & instruction(7) &
+						instruction(30 downto 25) & instruction(11 downto 8) & '0'),
 						immd_b'length));
-	immd_u <= std_logic_vector(if_id_register.instruction(31 downto 12) & X"000"); 
-	immd_j <= std_logic_vector(resize(signed(if_id_register.instruction(31) & 
-						if_id_register.instruction(19 downto 12) & if_id_register.instruction(20) & 
-						if_id_register.instruction(30 downto 21) & '0'), immd_j'length));
+	immd_u <= std_logic_vector(instruction(31 downto 12) & X"000"); 
+	immd_j <= std_logic_vector(resize(signed(instruction(31) & 
+						instruction(19 downto 12) & instruction(20) & 
+						instruction(30 downto 21) & '0'), immd_j'length));
 	
 	with id_control.pc_immd select pc_immd <= 
 		std_logic_vector(signed(if_id_register.pc) + signed(immd_j)) when pc_immd_j,
