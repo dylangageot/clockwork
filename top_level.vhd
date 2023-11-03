@@ -32,10 +32,28 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity top_level is
     Port ( clk : in  STD_LOGIC;
            rst : in  STD_LOGIC;
-           led : out  STD_LOGIC_VECTOR (7 downto 0));
+			  nibble : in STD_LOGIC;
+			  word_select: in STD_LOGIC;
+           led : out  STD_LOGIC_VECTOR (7 downto 0);
+			  MemOE : out  STD_LOGIC;
+			  FlashCS : out  STD_LOGIC;
+			  FlashRp : out  STD_LOGIC;
+			  MemAddr : out  STD_LOGIC_VECTOR (26 downto 1);
+			  MemDB : in  STD_LOGIC_VECTOR (15 downto 0);
+           seg : out  STD_LOGIC_VECTOR (7 downto 0);
+           an : out  STD_LOGIC_VECTOR (3 downto 0)
+	);
 end top_level;
 
 architecture Behavioral of top_level is
+
+	component clock_gen
+	port
+	(
+	  CLK_IN1           : in     std_logic;
+	  CLK_OUT1          : out    std_logic
+	 );
+	end component;
 
 	component cpu is
 		 Port (
@@ -53,14 +71,6 @@ architecture Behavioral of top_level is
 		 );
 	end component;
 
-	component clock_gen
-	port
-	(
-	  CLK_IN1           : in     std_logic;
-	  CLK_OUT1          : out    std_logic
-	 );
-	end component;
-
 	COMPONENT data_cache
 	  PORT (
 		 clka : IN STD_LOGIC;
@@ -72,7 +82,6 @@ architecture Behavioral of top_level is
 	  );
 	END COMPONENT;
 
-
 	component instruction_cache is
 		Port (
 			clka : IN STD_LOGIC;
@@ -82,19 +91,64 @@ architecture Behavioral of top_level is
 		);
 	end component;
 
+	component rom_manager is
+		 Generic(
+			initial_threshold : integer := 12;
+			steady_threshold : integer := 3
+		 );
+		 Port ( clk : in  STD_LOGIC;
+				  rst : in  STD_LOGIC;
+				  enable : in STD_LOGIC;
+				  rd : in  STD_LOGIC;
+				  address : in  STD_LOGIC_VECTOR (26 downto 2);
+				  ready : out  STD_LOGIC;
+				  output : out STD_LOGIC_VECTOR (31 downto 0);
+				  MemOE : out  STD_LOGIC;
+				  FlashCS : out  STD_LOGIC;
+				  FlashRp : out  STD_LOGIC;
+				  MemAddr : out  STD_LOGIC_VECTOR (26 downto 1);
+				  MemDB : in  STD_LOGIC_VECTOR (15 downto 0)
+		 );
+	end component;
+
+	component seg8_mux is
+		 Port ( CLK_100MHZ : in  STD_LOGIC;
+				  Seg1 : in  STD_LOGIC_VECTOR (7 downto 0);
+				  Seg2 : in  STD_LOGIC_VECTOR (7 downto 0);
+				  Seg3 : in  STD_LOGIC_VECTOR (7 downto 0);
+				  Seg4 : in  STD_LOGIC_VECTOR (7 downto 0);
+				  Segments : out  STD_LOGIC_VECTOR (7 downto 0);
+				  Anodes : out  STD_LOGIC_VECTOR (3 downto 0));
+	end component;
+
+	component bcd7seg is
+		 Port ( Val_BCD : in STD_LOGIC_VECTOR (3 downto 0);
+				  Seg : out STD_LOGIC_VECTOR (6 downto 0));
+	end component;
+
 	signal clk_40m: std_logic := '0';
 	signal gpio: std_logic_vector (31 downto 0) := (others => '0');
 	signal drd, dready : std_logic := 'Z';
 	signal ddata, daddress, previous_daddress : std_logic_vector (31 downto 0) := (others => 'Z');
 	signal dwr : std_logic_vector (3 downto 0) := (others => 'Z');
 
-	signal idata, iaddress, previous_iaddress : std_logic_vector (31 downto 0) := (others => 'Z');
+	signal idata, iaddress : std_logic_vector (31 downto 0) := (others => '0');
 	signal iready : std_logic := '0';
 
    signal mem_out : std_logic_vector(31 downto 0);
 	signal enable_gpio, enable_mem, mem_ready : std_logic := '0';
 
+	type segments_t is array (0 to 3) of std_logic_vector(7 downto 0);
+	signal segments : segments_t := (others => (others => '1'));
+	signal selected_input_32b : std_logic_vector(31 downto 0);
+	signal selected_input : std_logic_vector(15 downto 0);
+
 begin
+	
+	cg1: clock_gen port map (
+		CLK_IN1 => clk,
+		CLK_OUT1 => clk_40m
+	);
 	
 	cpu1: cpu port map (
 		 clk => clk_40m,
@@ -110,9 +164,19 @@ begin
 		 iready => iready
 	);
 	
-	cg1: clock_gen port map (
-		CLK_IN1 => clk,
-		CLK_OUT1 => clk_40m
+	rm1: rom_manager port map (
+		clk => clk_40m,
+		rst => rst,
+		enable => '1',
+		rd => '1',
+		address => iaddress(26 downto 2),
+		ready => iready,
+		output => idata,
+		MemOE => MemOE,
+		FlashCS => FlashCS,
+		FlashRp => FlashRp,
+		MemAddr => MemAddr,
+		MemDB => MemDB
 	);
 	
 	led <= gpio(7 downto 0);
@@ -162,31 +226,32 @@ begin
 		end if;
 	end process;
 
-	ic1: instruction_cache port map (
-		clka => clk_40m,
-		ena => '1',
-		addra => iaddress,
-		douta => idata
+	with word_select select selected_input_32b <=
+		iaddress when '0',
+		idata when '1';
+
+	with nibble select selected_input <=
+		selected_input_32b(15 downto 0) when '0',
+		selected_input_32b(31 downto 16) when '1';
+		
+	seg8 : seg8_mux port map (
+		CLK_100MHZ => clk_40m,
+		Seg1 => segments(0),
+		Seg2 => segments(1),
+		Seg3 => segments(2),
+		Seg4 => segments(3),
+		Segments => seg,
+		Anodes => an
 	);
 	
-	iready_gen: process (iaddress, previous_iaddress)
-	begin
-		if previous_iaddress = iaddress then
-			iready <= '1';
-		else
-			iready <= '0';
-		end if;
-	end process;
-	
-	previous_iaddress_gen: process (rst, clk_40m, iaddress)
-	begin
-		if rst = '1' then
-			previous_iaddress <= (others => '0');
-		elsif rising_edge(clk_40m) then
-			previous_iaddress <= iaddress;
-		end if;
-	end process;
-	
+	segments(0)(7) <= not(iready);
+	seg_gen : for i in segments'range generate 
+		bcd2seg : bcd7seg port map (
+			Val_BCD => selected_input((4*i + 3) downto 4*i),
+			Seg => segments(i)(6 downto 0)
+		);
+	end generate;
+
 
 end Behavioral;
 

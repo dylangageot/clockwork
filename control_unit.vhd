@@ -233,7 +233,10 @@ begin
 						--!
 				end case;
 			when others =>
-				--!
+				id_control_var := id_nop;
+				ex_control_var := ex_nop;
+				mem_control_var := mem_nop;
+				wb_control_var := wb_nop;
 			end case;
 			id_control <= id_control_var;
 			ex_control <= ex_control_var;

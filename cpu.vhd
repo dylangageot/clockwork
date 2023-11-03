@@ -93,8 +93,8 @@ architecture Behavioral of cpu is
 	signal mem_control : mem_control_t := mem_nop;
 	signal wb_control : wb_control_t := wb_nop;
 	signal memory_filter_w, memory_write : std_logic_vector(3 downto 0);
-	signal pc_output, pc_input, next_pc, pc_4, 
-			 rf_input, rs_1, rs_2, alu_port_1, 
+	signal pc_output : std_logic_vector(31 downto 0) := (others => '0');
+	signal pc_input, pc_4, rf_input, rs_1, rs_2, alu_port_1, 
 			 alu_port_2, alu_output, memory_filter_r, pc_immd
 			 : std_logic_vector(31 downto 0);
 	signal mem_stall, branch_taken, raw : std_logic;
@@ -126,20 +126,19 @@ begin
 
 	pc_4 <= std_logic_vector(unsigned(pc_output) + 4);
 
-	with branch_taken select next_pc <=                            
-		pc_input when '1',
-		pc_4 when '0';
-		
 	--! program counter
-	process (clk, rst, enable, iready, raw, mem_stall)
+	process (clk, rst, enable)
 	begin
 		if rst = '1' then
 			pc_output <= (others => '0');
-		elsif rising_edge(clk) and enable = '1' and 
-				iready = '1' and raw = '0' and mem_stall = '0' then
-			pc_output <= next_pc;
+		elsif rising_edge(clk) and enable = '1' then
+			if branch_taken = '1' then
+				pc_output <= pc_input;
+			elsif iready = '1' and raw = '0' and mem_stall = '0' then
+				pc_output <= pc_4;
+			end if;
 		end if;
-	end process;	
+	end process;
 	
 	iaddress <= pc_output;
 	
