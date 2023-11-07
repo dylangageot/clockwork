@@ -37,6 +37,8 @@ end i_cache;
 
 architecture Behavioral of i_cache is
 
+	--! The tag cache contains tag for each cache line.
+	--! A tag is 20 bits length, an extra bit is used to check validity of cache line.
 	component tag_cache
 	  port (
 		 clka : in std_logic;
@@ -49,6 +51,8 @@ architecture Behavioral of i_cache is
 	  );
 	end component;
 
+	--! The memory cache contains the useful data.
+	--! The memory is currently organized to contains 512 instructions, banked into 64 sets of 8 instructions each (32 bytes).
 	component memory_cache
 	  port (
 		 clka : in std_logic;
@@ -61,24 +65,29 @@ architecture Behavioral of i_cache is
 	  );
 	end component;
 
-	signal previous_iaddress : std_logic_vector(31 downto 2) := (others => 'U');
-
+	--! address layout: | ---- tag ---- | -- index -- | - offset - |
 	alias offset is iaddress(4 downto 2);
 	alias index is iaddress(10 downto 5);
 	alias tag is iaddress(31 downto 11);
 	
+	--! The instruction address is latched to perform safe operation, inspite of a volatile input.
+	signal previous_iaddress : std_logic_vector(31 downto 2) := (others => 'U');
 	alias latched_offset is previous_iaddress(4 downto 2);
 	alias latched_index is previous_iaddress(10 downto 5);
 	alias latched_tag is previous_iaddress(31 downto 11);
 	
+	--! Beginning state: idle
+	--! The idle state does wait for a valid address prompt (previous address matched with current address)
+	--! If the prompted address has an invalid tag of different tag, current state is set to fetch cache line.
+	--! The fetch cache line state performs the memory transfer from lower memory to the memory cache.
+	--! Once the eight instructions are transfered, current state is set to update tag.
+	--! The update tag state writes to the tag cache the prompted tag with a valid bit, then the current state is set to idle.
 	type fsm_state_t is (idle, fetch_cache_line, update_tag);
 	signal current_state : fsm_state_t := idle;
 	
 	signal hit, write_tag, write_mem : std_logic := 'U';
 	signal tag_in, tag_out : std_logic_vector(21 downto 0) := (others => 'U');
 	signal fetch_addr, mem_cache_addr : std_logic_vector(8 downto 0) :=  (others => 'U');
-	
-	
 	
 begin
 
