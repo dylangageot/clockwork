@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="C:/Users/Dylan/Documents/vhdl/riscv/testbench_i_cache_isim_beh.wdb" id="1" type="auto">
+         <top_modules>
+            <top_module name="numeric_std" />
+            <top_module name="std_logic_1164" />
+            <top_module name="std_logic_arith" />
+            <top_module name="std_logic_textio" />
+            <top_module name="std_logic_unsigned" />
+            <top_module name="testbench_i_cache" />
+            <top_module name="textio" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="19" />
+   <wvobject fp_name="/testbench_i_cache/clk" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/rst" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/enable" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">enable</obj_property>
+      <obj_property name="ObjectShortName">enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/iaddress" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">iaddress[31:2]</obj_property>
+      <obj_property name="ObjectShortName">iaddress[31:2]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/previous_iaddress" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">previous_iaddress[31:2]</obj_property>
+      <obj_property name="ObjectShortName">previous_iaddress[31:2]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/idata" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">idata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">idata[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/iready" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">iready</obj_property>
+      <obj_property name="ObjectShortName">iready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/memaddress" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">memaddress[31:0]</obj_property>
+      <obj_property name="ObjectShortName">memaddress[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/memdata" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">memdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">memdata[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/memready" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">memready</obj_property>
+      <obj_property name="ObjectShortName">memready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/clk_period" type="other" db_ref_id="1">
+      <obj_property name="ElementShortName">clk_period</obj_property>
+      <obj_property name="ObjectShortName">clk_period</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/current_state" type="other" db_ref_id="1">
+      <obj_property name="ElementShortName">current_state</obj_property>
+      <obj_property name="ObjectShortName">current_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/write_tag" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">write_tag</obj_property>
+      <obj_property name="ObjectShortName">write_tag</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/write_mem" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">write_mem</obj_property>
+      <obj_property name="ObjectShortName">write_mem</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/hit" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">hit</obj_property>
+      <obj_property name="ObjectShortName">hit</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/tag_in" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">tag_in[21:0]</obj_property>
+      <obj_property name="ObjectShortName">tag_in[21:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/tag_out" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">tag_out[21:0]</obj_property>
+      <obj_property name="ObjectShortName">tag_out[21:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/fetch_addr" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">fetch_addr[8:0]</obj_property>
+      <obj_property name="ObjectShortName">fetch_addr[8:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_i_cache/uut/mem_cache_addr" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">mem_cache_addr[8:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_cache_addr[8:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+</wave_config>

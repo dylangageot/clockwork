@@ -81,15 +81,20 @@ architecture Behavioral of top_level is
 		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	  );
 	END COMPONENT;
-
-	component instruction_cache is
-		Port (
-			clka : IN STD_LOGIC;
-			ena : IN STD_LOGIC;
-			addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-			douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+	
+	COMPONENT i_cache is
+		port (
+			clk : in std_logic;
+			rst : in std_logic;
+			enable : in std_logic;
+			iaddress : in std_logic_vector(31 downto 2);
+			idata : out std_logic_vector(31 downto 0);
+			iready : out std_logic;
+			memaddress : out std_logic_vector(31 downto 0);
+			memdata : in std_logic_vector(31 downto 0);
+			memready : in std_logic
 		);
-	end component;
+	end COMPONENT;
 
 	component rom_manager is
 		 Generic(
@@ -132,8 +137,11 @@ architecture Behavioral of top_level is
 	signal ddata, daddress, previous_daddress : std_logic_vector (31 downto 0) := (others => 'Z');
 	signal dwr : std_logic_vector (3 downto 0) := (others => 'Z');
 
-	signal idata, iaddress : std_logic_vector (31 downto 0) := (others => '0');
-	signal iready : std_logic := '0';
+	signal idata, iaddress : std_logic_vector (31 downto 0) := (others => 'U');
+	signal iready : std_logic := 'U';
+	
+	signal memdata, memaddress : std_logic_vector (31 downto 0) := (others => 'U');
+	signal memready : std_logic := 'U';
 
    signal mem_out : std_logic_vector(31 downto 0);
 	signal enable_gpio, enable_mem, mem_ready : std_logic := '0';
@@ -164,14 +172,26 @@ begin
 		 iready => iready
 	);
 	
+	ic1: i_cache port map (
+		clk => clk_40m,
+		rst => rst,
+		enable => '1',
+		iaddress => iaddress(31 downto 2),
+		idata => idata,
+		iready => iready,
+		memaddress => memaddress,
+		memdata => memdata,
+		memready => memready
+	);
+	
 	rm1: rom_manager port map (
 		clk => clk_40m,
 		rst => rst,
 		enable => '1',
 		rd => '1',
-		address => iaddress(26 downto 2),
-		ready => iready,
-		output => idata,
+		address => memaddress(26 downto 2),
+		ready => memready,
+		output => memdata,
 		MemOE => MemOE,
 		FlashCS => FlashCS,
 		FlashRp => FlashRp,

@@ -1,0 +1,167 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    15:42:30 11/05/2023 
+-- Design Name: 
+-- Module Name:    i_cache - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity i_cache is
+	port (
+		clk : in std_logic;
+		rst : in std_logic;
+		enable : in std_logic;
+		iaddress : in std_logic_vector(31 downto 2);
+		idata : out std_logic_vector(31 downto 0);
+		iready : out std_logic;
+		memaddress : out std_logic_vector(31 downto 0);
+		memdata : in std_logic_vector(31 downto 0);
+		memready : in std_logic
+	);
+end i_cache;
+
+architecture Behavioral of i_cache is
+
+	component tag_cache
+	  port (
+		 clka : in std_logic;
+		 rsta : in std_logic;
+		 ena : in std_logic;
+		 wea : in std_logic_vector(0 downto 0);
+		 addra : in std_logic_vector(5 downto 0);
+		 dina : in std_logic_vector(21 downto 0);
+		 douta : out std_logic_vector(21 downto 0)
+	  );
+	end component;
+
+	component memory_cache
+	  port (
+		 clka : in std_logic;
+		 rsta : in std_logic;
+		 ena : in std_logic;
+		 wea : in std_logic_vector(0 downto 0);
+		 addra : in std_logic_vector(8 downto 0);
+		 dina : in std_logic_vector(31 downto 0);
+		 douta : out std_logic_vector(31 downto 0)
+	  );
+	end component;
+
+	signal previous_iaddress : std_logic_vector(31 downto 2) := (others => 'U');
+
+	alias offset is iaddress(4 downto 2);
+	alias index is iaddress(10 downto 5);
+	alias tag is iaddress(31 downto 11);
+	
+	alias latched_offset is previous_iaddress(4 downto 2);
+	alias latched_index is previous_iaddress(10 downto 5);
+	alias latched_tag is previous_iaddress(31 downto 11);
+	
+	type fsm_state_t is (idle, fetch_cache_line, update_tag);
+	signal current_state : fsm_state_t := idle;
+	
+	signal hit, write_tag, write_mem : std_logic := 'U';
+	signal tag_in, tag_out : std_logic_vector(21 downto 0) := (others => 'U');
+	signal fetch_addr, mem_cache_addr : std_logic_vector(8 downto 0) :=  (others => 'U');
+	
+	
+	
+begin
+
+	tag_cache_1 : tag_cache port map (
+		clka => clk,
+		rsta => rst,
+		ena => enable,
+		wea(0) => write_tag,
+		addra => index,
+		dina => tag_in,
+		douta => tag_out
+	);
+	
+	mem_cache_1 : memory_cache port map (
+		clka => clk,
+		rsta => rst,
+		ena => enable,
+		wea(0) => write_mem,
+		addra => mem_cache_addr,
+		dina => memdata,
+		douta => idata
+	);
+
+	with write_mem select mem_cache_addr <=
+		fetch_addr when '1',
+		index & offset when others;
+
+	with current_state select write_mem <= 
+		'1' when fetch_cache_line,
+		'0' when others;
+		
+	with current_state select write_tag <= 
+		'1' when update_tag,
+		'0' when others;
+
+	hit_gen : process (iaddress, tag_out, current_state, previous_iaddress)
+	begin
+		if tag_out(21) = '1' and tag = tag_out(20 downto 0) then
+			hit <= '1';
+			if current_state = idle and previous_iaddress = iaddress then
+				iready <= '1';
+			else 
+				iready <= '0';
+			end if;
+ 		else
+			hit <= '0';
+			iready <= '0';
+		end if;
+	end process;
+
+	future_state : process (rst, clk, enable)
+		variable offset_counter : integer := 0;
+	begin
+		if rst = '1' then
+			memaddress <= (others => '0');
+			fetch_addr <= (others => '0');
+			previous_iaddress <= (others => '0');
+			current_state <= idle;
+		elsif rising_edge(clk) and enable = '1' then
+			case current_state is
+				when idle =>
+					if hit = '0' and previous_iaddress = iaddress then
+						current_state <= fetch_cache_line;
+						offset_counter := 0;
+					else
+						previous_iaddress <= iaddress;
+					end if;
+				when fetch_cache_line =>
+					if memready = '1' then
+						offset_counter := offset_counter + 1;
+						if offset_counter >= 2**(offset'length) then
+							current_state <= update_tag;
+							tag_in <= '1' & latched_tag;
+						end if;
+					end if;
+				when update_tag =>
+					current_state <= idle;
+				when others =>
+			end case;
+			fetch_addr <= latched_index & std_logic_vector(to_unsigned(offset_counter, offset'length));
+			memaddress <=  latched_tag & latched_index & std_logic_vector(to_unsigned(offset_counter, offset'length)) & "00";
+		end if;
+	end process;
+
+end Behavioral;
+
