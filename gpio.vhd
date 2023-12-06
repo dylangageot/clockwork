@@ -1,7 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-
 entity gpio is
 	Port (
 		clk : in  STD_LOGIC;
