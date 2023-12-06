@@ -60,17 +60,6 @@ architecture Behavioral of top_level is
 			iready: in STD_LOGIC
 		 );
 	end component;
-
-	component data_cache
-		port (
-			clka : IN STD_LOGIC;
-			ena : IN STD_LOGIC;
-			wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-			addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-			dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-			douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
-		);
-	end component;
 	
 	component i_cache is
 		port (
@@ -139,10 +128,23 @@ architecture Behavioral of top_level is
 			dready: inout STD_LOGIC
 		);
 	end component;
+	
+	component ram is
+		port (
+			clk : in std_logic;
+			rst : in std_logic;
+			enable : in std_logic;
+			daddress : inout std_logic_vector(31 downto 0);
+			ddata : inout std_logic_vector(31 downto 0);
+			dwr : inout std_logic_vector(3 downto 0);
+			drd : inout std_logic;
+			dready: inout std_logic
+		);
+	end component;
 
 	signal clk_40m: std_logic := '0';
 	signal drd, dready : std_logic := 'Z';
-	signal ddata, daddress, previous_daddress : std_logic_vector (31 downto 0) := (others => 'Z');
+	signal ddata, daddress : std_logic_vector (31 downto 0) := (others => 'Z');
 	signal dwr : std_logic_vector (3 downto 0) := (others => 'Z');
 
 	signal idata, iaddress : std_logic_vector (31 downto 0) := (others => 'U');
@@ -151,8 +153,7 @@ architecture Behavioral of top_level is
 	signal memdata, memaddress : std_logic_vector (31 downto 0) := (others => 'U');
 	signal memready : std_logic := 'U';
 
-   signal mem_out : std_logic_vector(31 downto 0);
-	signal enable_mem, mem_ready : std_logic := '0';
+	signal enable_mem : std_logic := '0';
 	signal gpio_out: std_logic_vector (31 downto 0) := (others => '0');
 
 	type segments_t is array (0 to 3) of std_logic_vector(7 downto 0);
@@ -208,7 +209,6 @@ begin
 		MemDB => MemDB
 	);
 	
-
 	--! GPIO
 	gpio1: gpio port map (
 		clk => clk_40m,
@@ -225,36 +225,17 @@ begin
 	
 	--! data cache
 	enable_mem <= not(daddress(31));
-	dc1: data_cache port map (
-		clka => clk_40m,
-		ena => enable_mem,
-		wea => dwr,
-		addra => daddress,
-		dina => ddata,
-		douta => mem_out
+	ram1 : ram port map (
+		clk => clk_40m,
+		rst => rst,
+		enable => enable_mem,
+		daddress => daddress,
+		ddata => ddata,
+		dwr => dwr,
+		drd => drd,
+		dready => dready
 	);
 	
-	dready <= mem_ready when enable_mem = '1' and (dwr(0) = '1' or drd = '1') else 'Z';
-	ddata <= mem_out when enable_mem = '1' and drd = '1' else (others => 'Z');
-	
-	mem_ready_gen: process (dwr, drd, daddress, previous_daddress)
-	begin
-		if dwr(0) = '1' then
-			mem_ready <= '1';
-		elsif drd = '1' and previous_daddress = daddress then
-			mem_ready <= '1';
-		else
-			mem_ready <= '0';
-		end if;
-	end process;
-	--! the memory shall throw a non-ready state once a new address is requested
-	previous_address_gen: process (clk_40m, daddress, dwr, enable_mem)
-	begin
-		if rising_edge(clk_40m) and enable_mem = '1' then
-			previous_daddress <= daddress;
-		end if;
-	end process;
-
 	with word_select select selected_input_32b <=
 		iaddress when '0',
 		idata when '1';
