@@ -209,7 +209,6 @@ begin
 		MemDB => MemDB
 	);
 	
-	--! GPIO
 	gpio1: gpio port map (
 		clk => clk_40m,
 		rst => rst,
@@ -223,7 +222,6 @@ begin
 	);
 	led <= gpio_out(7 downto 0);
 	
-	--! data cache
 	enable_mem <= not(daddress(31));
 	ram1 : ram port map (
 		clk => clk_40m,
