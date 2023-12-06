@@ -20,15 +20,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity top_level is
     Port ( clk : in  STD_LOGIC;
            rst : in  STD_LOGIC;
@@ -131,8 +122,21 @@ architecture Behavioral of top_level is
 				  Seg : out STD_LOGIC_VECTOR (6 downto 0));
 	end component;
 
+	component gpio is
+		Port (
+			clk : in  STD_LOGIC;
+			rst : in  STD_LOGIC;
+			gpio_out : out STD_LOGIC_VECTOR(31 downto 0);
+			enable : in STD_LOGIC;
+			daddress : inout  STD_LOGIC_VECTOR(31 downto 0);
+			ddata : inout  STD_LOGIC_VECTOR(31 downto 0);
+			dwr : inout STD_LOGIC_VECTOR(3 downto 0);
+			drd : inout STD_LOGIC;
+			dready: inout STD_LOGIC
+		);
+	end component;
+
 	signal clk_40m: std_logic := '0';
-	signal gpio: std_logic_vector (31 downto 0) := (others => '0');
 	signal drd, dready : std_logic := 'Z';
 	signal ddata, daddress, previous_daddress : std_logic_vector (31 downto 0) := (others => 'Z');
 	signal dwr : std_logic_vector (3 downto 0) := (others => 'Z');
@@ -144,7 +148,8 @@ architecture Behavioral of top_level is
 	signal memready : std_logic := 'U';
 
    signal mem_out : std_logic_vector(31 downto 0);
-	signal enable_gpio, enable_mem, mem_ready : std_logic := '0';
+	signal enable_mem, mem_ready : std_logic := '0';
+	signal gpio_out: std_logic_vector (31 downto 0) := (others => '0');
 
 	type segments_t is array (0 to 3) of std_logic_vector(7 downto 0);
 	signal segments : segments_t := (others => (others => '1'));
@@ -199,20 +204,20 @@ begin
 		MemDB => MemDB
 	);
 	
-	led <= gpio(7 downto 0);
 
 	--! GPIO
-	enable_gpio <= daddress(31);
-	dready <= '1' when enable_gpio = '1' and (drd = '1' or dwr(0) = '1') else 'Z';
-	ddata <= gpio when enable_gpio = '1' and drd = '1' else (others => 'Z');
-	gpio_gen: process (clk_40m, rst, enable_gpio, dwr)
-	begin
-		if rst = '1' then
-			gpio <= (others => '0');
-		elsif rising_edge(clk_40m) and enable_gpio = '1' and dwr /= "0000" then
-			gpio <= ddata;
-		end if;
-	end process;
+	gpio1: gpio port map (
+		clk => clk_40m,
+		rst => rst,
+		enable => daddress(31),
+		daddress => daddress,
+		ddata => ddata,
+		dwr => dwr,
+		drd => drd,
+		dready => dready,
+		gpio_out => gpio_out
+	);
+	led <= gpio_out(7 downto 0);
 	
 	--! data cache
 	enable_mem <= not(daddress(31));
