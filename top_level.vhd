@@ -39,41 +39,40 @@ end top_level;
 architecture Behavioral of top_level is
 
 	component clock_gen
-	port
-	(
-	  CLK_IN1           : in     std_logic;
-	  CLK_OUT1          : out    std_logic
-	 );
-	end component;
-
-	component cpu is
-		 Port (
-				clk : in  STD_LOGIC;
-				rst : in STD_LOGIC;
-				enable : in STD_LOGIC;
-				daddress : inout  STD_LOGIC_VECTOR (31 downto 0);
-				ddata : inout  STD_LOGIC_VECTOR (31 downto 0);
-				dwr : inout STD_LOGIC_VECTOR(3 downto 0);
-				drd : inout STD_LOGIC;
-				dready: inout STD_LOGIC;
-				iaddress : out STD_LOGIC_VECTOR (31 downto 0);
-				idata : in STD_LOGIC_VECTOR (31 downto 0);
-				iready: in STD_LOGIC
+		port (
+			CLK_IN1 : in std_logic;
+			CLK_OUT1 : out std_logic
 		 );
 	end component;
 
-	COMPONENT data_cache
-	  PORT (
-		 clka : IN STD_LOGIC;
-		 ena : IN STD_LOGIC;
-		 wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		 addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
-	  );
-	END COMPONENT;
+	component cpu is
+		 port (
+			clk : in  STD_LOGIC;
+			rst : in STD_LOGIC;
+			enable : in STD_LOGIC;
+			daddress : inout  STD_LOGIC_VECTOR (31 downto 0);
+			ddata : inout  STD_LOGIC_VECTOR (31 downto 0);
+			dwr : inout STD_LOGIC_VECTOR(3 downto 0);
+			drd : inout STD_LOGIC;
+			dready: inout STD_LOGIC;
+			iaddress : out STD_LOGIC_VECTOR (31 downto 0);
+			idata : in STD_LOGIC_VECTOR (31 downto 0);
+			iready: in STD_LOGIC
+		 );
+	end component;
+
+	component data_cache
+		port (
+			clka : IN STD_LOGIC;
+			ena : IN STD_LOGIC;
+			wea : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+			addra : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+			dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+			douta : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+		);
+	end component;
 	
-	COMPONENT i_cache is
+	component i_cache is
 		port (
 			clk : in std_logic;
 			rst : in std_logic;
@@ -85,45 +84,50 @@ architecture Behavioral of top_level is
 			memdata : in std_logic_vector(31 downto 0);
 			memready : in std_logic
 		);
-	end COMPONENT;
+	end component;
 
 	component rom_manager is
-		 Generic(
+		generic(
 			initial_threshold : integer := 12;
 			steady_threshold : integer := 3
-		 );
-		 Port ( clk : in  STD_LOGIC;
-				  rst : in  STD_LOGIC;
-				  enable : in STD_LOGIC;
-				  rd : in  STD_LOGIC;
-				  address : in  STD_LOGIC_VECTOR (26 downto 2);
-				  ready : out  STD_LOGIC;
-				  output : out STD_LOGIC_VECTOR (31 downto 0);
-				  MemOE : out  STD_LOGIC;
-				  FlashCS : out  STD_LOGIC;
-				  FlashRp : out  STD_LOGIC;
-				  MemAddr : out  STD_LOGIC_VECTOR (26 downto 1);
-				  MemDB : in  STD_LOGIC_VECTOR (15 downto 0)
-		 );
+		);
+		port ( 
+			clk : in  STD_LOGIC;
+			rst : in  STD_LOGIC;
+			enable : in STD_LOGIC;
+			rd : in  STD_LOGIC;
+			address : in  STD_LOGIC_VECTOR (26 downto 2);
+			ready : out  STD_LOGIC;
+			output : out STD_LOGIC_VECTOR (31 downto 0);
+			MemOE : out  STD_LOGIC;
+			FlashCS : out  STD_LOGIC;
+			FlashRp : out  STD_LOGIC;
+			MemAddr : out  STD_LOGIC_VECTOR (26 downto 1);
+			MemDB : in  STD_LOGIC_VECTOR (15 downto 0)
+		);
 	end component;
 
 	component seg8_mux is
-		 Port ( CLK_100MHZ : in  STD_LOGIC;
-				  Seg1 : in  STD_LOGIC_VECTOR (7 downto 0);
-				  Seg2 : in  STD_LOGIC_VECTOR (7 downto 0);
-				  Seg3 : in  STD_LOGIC_VECTOR (7 downto 0);
-				  Seg4 : in  STD_LOGIC_VECTOR (7 downto 0);
-				  Segments : out  STD_LOGIC_VECTOR (7 downto 0);
-				  Anodes : out  STD_LOGIC_VECTOR (3 downto 0));
+		port ( 
+			CLK_100MHZ : in  STD_LOGIC;
+			Seg1 : in  STD_LOGIC_VECTOR (7 downto 0);
+			Seg2 : in  STD_LOGIC_VECTOR (7 downto 0);
+			Seg3 : in  STD_LOGIC_VECTOR (7 downto 0);
+			Seg4 : in  STD_LOGIC_VECTOR (7 downto 0);
+			Segments : out  STD_LOGIC_VECTOR (7 downto 0);
+			Anodes : out  STD_LOGIC_VECTOR (3 downto 0)
+		);
 	end component;
 
 	component bcd7seg is
-		 Port ( Val_BCD : in STD_LOGIC_VECTOR (3 downto 0);
-				  Seg : out STD_LOGIC_VECTOR (6 downto 0));
+		port ( 
+			Val_BCD : in STD_LOGIC_VECTOR (3 downto 0);
+			Seg : out STD_LOGIC_VECTOR (6 downto 0)
+		);
 	end component;
 
 	component gpio is
-		Port (
+		port (
 			clk : in  STD_LOGIC;
 			rst : in  STD_LOGIC;
 			gpio_out : out STD_LOGIC_VECTOR(31 downto 0);
