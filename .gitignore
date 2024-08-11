@@ -2,7 +2,6 @@
 *.bgn
 *.ini
 *.log
-*.xise
 *.gise
 *.bit
 *.wdb
@@ -76,6 +75,7 @@ _xmsgs/
 isim/
 
 ipcore_dir/**
+!ipcore_dir/*.xise
 !ipcore_dir/*.xco
 !ipcore_dir/*.cgp
 xlnx_auto_0_xdb/
