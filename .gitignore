@@ -51,6 +51,7 @@
 *_xst.xrpt
 *.exe
 *.cmd
+*.mif
 
 # iMPACT generated files
 _impactbatch.log
@@ -73,3 +74,8 @@ xst/
 _ngo/
 _xmsgs/
 isim/
+
+ipcore_dir/**
+!ipcore_dir/*.xco
+!ipcore_dir/*.cgp
+xlnx_auto_0_xdb/

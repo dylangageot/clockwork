@@ -16,9 +16,9 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="12" />
+   <WVObjectSize size="13" />
    <wave_markers>
-      <marker time="131400000" label="" />
+      <marker time="125100000" label="" />
    </wave_markers>
    <wvobject fp_name="/testbench_cpu/clk" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">clk</obj_property>
@@ -74,5 +74,9 @@
       <obj_property name="ElementShortName">[1]</obj_property>
       <obj_property name="ObjectShortName">register_file[1]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench_cpu/rd" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rd</obj_property>
+      <obj_property name="ObjectShortName">rd</obj_property>
    </wvobject>
 </wave_config>

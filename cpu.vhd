@@ -1,22 +1,3 @@
--------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    17:24:48 09/17/2023 
--- Design Name: 
--- Module Name:    cpu - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
---
--- Dependencies: 
---
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
