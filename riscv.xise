@@ -19,13 +19,13 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="2"/>
     </file>
-    <file xil_pn:name="testbench_program_counter.vhd" xil_pn:type="FILE_VHDL">
+    <file xil_pn:name="test/testbench_program_counter.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="38"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="38"/>
       <association xil_pn:name="PostTranslateSimulation" xil_pn:seqID="38"/>
     </file>
-    <file xil_pn:name="testbench_register_file.vhd" xil_pn:type="FILE_VHDL">
+    <file xil_pn:name="test/testbench_register_file.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="60"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="60"/>
@@ -35,7 +35,7 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
     </file>
-    <file xil_pn:name="testbench_alu.vhd" xil_pn:type="FILE_VHDL">
+    <file xil_pn:name="test/testbench_alu.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="157"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="157"/>
@@ -57,7 +57,7 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="3"/>
     </file>
-    <file xil_pn:name="testbench_cpu.vhd" xil_pn:type="FILE_VHDL">
+    <file xil_pn:name="test/testbench_cpu.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="161"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="161"/>
@@ -98,7 +98,7 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="3"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="12"/>
     </file>
-    <file xil_pn:name="testbench_i_cache.vhd" xil_pn:type="FILE_VHDL">
+    <file xil_pn:name="test/testbench_i_cache.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="4"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="262"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="262"/>
