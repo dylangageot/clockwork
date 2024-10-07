@@ -33,14 +33,8 @@
     <file xil_pn:fileType="FILE_ASY" xil_pn:name="ipcore_dir/tag_cache.asy" xil_pn:origination="imported"/>
     <file xil_pn:fileType="FILE_SYMBOL" xil_pn:name="ipcore_dir/tag_cache.sym" xil_pn:origination="imported"/>
     <file xil_pn:fileType="FILE_VHO" xil_pn:name="ipcore_dir/tag_cache.vho" xil_pn:origination="imported"/>
-    <file xil_pn:fileType="FILE_NCD" xil_pn:name="top_level_guide.ncd" xil_pn:origination="imported"/>
   </files>
 
-  <transforms xmlns="http://www.xilinx.com/XMLSchema">
-    <transform xil_pn:end_ts="1728285117" xil_pn:in_ck="-4207651630827645904" xil_pn:name="TRAN_SubProjectAbstractToPreProxy" xil_pn:start_ts="1728285117">
-      <status xil_pn:value="SuccessfullyRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-    </transform>
-  </transforms>
+  <transforms xmlns="http://www.xilinx.com/XMLSchema"/>
 
 </generated_project>
