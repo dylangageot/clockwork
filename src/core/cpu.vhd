@@ -31,18 +31,6 @@ architecture Behavioral of cpu is
 		);
 	end component;
 	
-	component program_counter is
-		Port ( 
-			clk : in  STD_LOGIC;
-			ce : in  STD_LOGIC;
-			rst : in  STD_LOGIC;
-			ci : in STD_LOGIC;
-			input : in  STD_LOGIC_VECTOR (31 downto 0);
-			next_pc : out STD_LOGIC_VECTOR(31 downto 0);
-			output : out  STD_LOGIC_VECTOR (31 downto 0)
-		);
-	end component;
-
 	component register_file is
 		Port ( 
 			clk : in  STD_LOGIC;
