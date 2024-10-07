@@ -51,6 +51,7 @@
 *.exe
 *.cmd
 *.mif
+*.html
 
 # iMPACT generated files
 _impactbatch.log
