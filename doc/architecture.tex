@@ -1,0 +1,239 @@
+\documentclass[12pt,landscape]{article}
+\usepackage[paperheight=7.25in,paperwidth=16.5in,margin=0.25in]{geometry}
+
+\usepackage{circuitikz}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+
+\begin{document}
+
+\tikzset{component/.style={font=\small\ttfamily, align=center}}
+\tikzset{intercon/.style={circle, fill, inner sep=1.5pt}}
+\tikzset{adder/.style={muxdemux, muxdemux def={
+            Lh=2, Rh=1, inset w=0.5, inset Lh=1, inset Rh=0.5, w=1.25, NL=2, NB=0, NR=1
+        }
+    }
+}
+\tikzset{mux/.style={muxdemux, muxdemux def={
+            Lh=4, Rh=2, NL=4, NB=1, NR=1, w=1
+        }
+    }
+}
+\tikzset{demux/.style={muxdemux, muxdemux def={
+            Lh=2, Rh=4, NL=1, NB=4, NR=1, w=1
+        }
+    }
+}
+\tikzset{alu/.style={
+        muxdemux, component, muxdemux def={
+            Lh=5, Rh=2, NL=2, NR=1, NB=1, NT=0, w=3, 
+            inset w=1, inset Lh=2, inset Rh=1, square pins =1
+        }
+    }
+}
+\tikzset{register file/.style={
+        muxdemux, component, muxdemux def={
+            Lh=5, Rh=5, NL=5, NR=5, NB=1, NT=0, w=6.5, square pins =1
+        }, no input leads 
+    }
+}
+\tikzset{control unit/.style={
+        muxdemux, component, muxdemux def={
+            Lh=3, Rh=3, NL=3, NR=1, NB=0, NT=0, w=7, square pins =1
+        }, no input leads
+    }
+}
+\tikzset{instruction memory/.style={
+        muxdemux, component, muxdemux def={
+            Lh=8, Rh=8, NL=5, NR=5, NB=1, NT=0, w=6, square pins =1
+        }, no input leads
+    }
+}
+\tikzset{program counter/.style={
+        muxdemux, component, muxdemux def={
+            Lh=4, Rh=4, NL=3, NR=3, NB=1, NT=0, w=6, square pins =1
+        }, no input leads
+    }
+}
+\tikzset{immediate generator/.style={
+        muxdemux, component, muxdemux def={
+            Lh=2, Rh=2, NL=1, NR=3, NB=0, NT=0, w=4, square pins =1
+        }, no input leads
+    }
+}
+\tikzset{memory/.style={
+        muxdemux, component, muxdemux def={
+            Lh=8, Rh=8, NL=5, NR=5, NB=1, NT=0, w=6, square pins =1
+        }, no input leads
+    }
+}
+
+\begin{circuitikz}[american]
+    % thing to know: the alu is the center of the schematic
+    \begin{scope}[name=alu]
+        \node[alu](alu){\rotatebox{90}{ALU}};
+        \draw (alu.bpin 1) node[below, font=\tiny]{$C_{op}$};
+    \end{scope}
+    
+    % rf relative to alu
+    \begin{scope}[name=register file]
+        % rf
+        \node[register file, left=5cm of alu](rf){Register\\File};
+        \foreach \rawpin/\label in {1/@rs1, 2/@rs2, 3/@rd, 4/rd} {
+            \draw (rf.blpin \rawpin) node[right, font=\tiny]{\label};
+        }        
+        \draw (rf.blpin 5) ++(0,0.1) -- ++(0.1,-0.1) node[right, font=\tiny]{clk} -- ++(-0.1,-0.1);
+        \foreach \rawpin/\label in {2/rs1, 4/rs2} {
+            \draw (rf.brpin \rawpin) node[left, font=\tiny]{\label};
+        }
+        % mux alu port
+        \node[mux, above right=1.2cm of rf.rpin 2,
+             muxdemux def={NL=2, NT=0, NB=1, Lh=2.5, Rh=1}](mux alu port 1){};
+        \node[mux, below right=1.4cm of rf.rpin 4](mux alu port 2){};
+        \draw (mux alu port 1.rpin 1) -| (alu.lpin 1);
+        \draw (mux alu port 2.rpin 1) -| (alu.lpin 2);
+        \draw (mux alu port 1.bpin 1) node[below,font=\tiny]{$C_{amp1}$};
+        \draw (mux alu port 2.bpin 1) node[below,font=\tiny]{$C_{amp2}$};
+
+        \draw (rf.bbpin 1) -- ++(0,-0.4) -- ++(0.4,0) node[right, font=\tiny]{$C_{wrd}$};
+        \draw (rf.brpin 2) -| (mux alu port 1.lpin 2);
+        \draw (rf.brpin 4) -| coordinate[intercon](rs2 con) (mux alu port 2.lpin 1);
+    \end{scope}
+ 
+    % cu relative to rf
+    \begin{scope}[name=control unit]
+        \node[control unit, above right=4cm and 0cm of rf.north west](cu){Control\\Unit};
+        \foreach \rawpin/\label in {1/opcode, 2/funct3, 3/funct7} {
+            \draw (cu.blpin \rawpin) node[right, font=\tiny]{\label};
+        }
+        \draw (cu.brpin 1) node[left, align=right, font=\tiny]{control\\vector};
+        \draw (cu.brpin 1) -- ++(0.4,0) node[right, font=\tiny]{$C_{...}$};
+    \end{scope}
+
+    % immediate
+    \begin{scope}[name=immediate generator]
+        % immediate i/u/s
+        \draw (mux alu port 2.lpin 2) --  (mux alu port 2.lpin 2 -| rf.south east) 
+            node[immediate generator, muxdemux def={Lh= 3, Rh = 3}, anchor=brpin 1](ig){Immd I/U/S\\Generator};
+        \draw (ig.brpin 1) node[above right, font=\tiny]{I};
+        \draw (ig.brpin 2) node[above right, font=\tiny]{U} -- ++(0.6,0)
+            coordinate[intercon](u con) node[above right, font=\tiny]{} -- (mux alu port 2.lpin 3);
+        \draw (ig.brpin 3) node[above right, font=\tiny]{S} -- (mux alu port 2.lpin 4);
+        % immediate j/b
+        \node[immediate generator, above right=2.5cm and 0cm of rf.north west](igjb){Immd J/B\\Generator};
+        \node[mux, muxdemux def={NL=2, NT=0, NB=1, Lh=2.5, Rh=1}, right=1.1cm of igjb](mux igjb){};
+        \draw (igjb.brpin 1) node[above right, font=\tiny]{J} |- (mux igjb.lpin 1);
+        \draw (igjb.brpin 3) node[above right, font=\tiny]{B} |- (mux igjb.lpin 2);
+        \draw (mux igjb.bpin 1) node[below,font=\tiny]{$C_{jb}$};
+        \draw (mux igjb.rpin 1) |- (mux igjb.rpin 1 -| mux alu port 1.blpin 1) 
+            node[adder, anchor=blpin 1, no input leads](adder branch){+};
+    \end{scope}
+
+    % im relative to rf
+    \begin{scope}[name=instruction memory]
+        \node[instruction memory, left=3cm of rf](im){Instruction\\Memory};        
+        \draw (im.blpin 1) node[right, font=\tiny]{address};
+        \draw (im.brpin 1) node[left, font=\tiny]{instruction};
+        \draw (im.blpin 5) ++(0,0.1) -- ++(0.1,-0.1) node[right, font=\tiny]{clk} -- ++(-0.1,-0.1);
+        %\draw (im.bbpin 1) -- ++(0,-0.4) node[below, font=\tiny]{$C_{epc}$};
+    \end{scope}
+
+    % pc relative to im
+    \begin{scope}[name=program counter]
+        \node[program counter, left=2cm of im.blpin 1, anchor=brpin 1](pc){Program\\Counter};
+        \draw (pc.blpin 1) node[right, font=\tiny]{in};
+        \draw (pc.brpin 1) node[left, font=\tiny]{out};
+        \draw (pc.blpin 3) ++(0,0.1) -- ++(0.1,-0.1) node[right, font=\tiny]{clk} -- ++(-0.1,-0.1);
+        % pc input
+        \node[mux, muxdemux def={NL=2, NT=1, NB=0, Lh=2.5, Rh=1}, left=1cm of pc.blpin 1](mux pc){};
+        \draw (mux pc.rpin 1) -- ++(0,0) -- (pc.blpin 1);
+        % adder pc + 4
+        \node[adder, left=0.5cm of mux pc.lpin 2](adder pc){+};
+        \draw (adder pc.rpin 1) coordinate[](pc 4 con) -- (mux pc.lpin 2);
+        \draw (adder pc.lpin 1) node[left]{4};
+        \draw (pc.brpin 1) -- ++(1,0) coordinate[intercon](pc out con) |- ++(0,-3) -| (adder pc.lpin 2);
+        \draw (pc out con) -- (pc out con |- mux alu port 1.lpin 1) -- ++(0,0.6) -| coordinate[intercon](pc out con 2) (mux alu port 1.lpin 1);
+        \draw (pc out con) -- (im.blpin 1);        
+        \draw (pc out con 2) coordinate[intercon](mux alu port pc) 
+            -- (mux alu port pc |- adder branch.lpin 2) -- (adder branch.blpin 2);
+    \end{scope}
+
+    \begin{scope}[name=instruction exploitation]
+        \draw[very thick] (im.brpin 1) -- ++(1,0) coordinate[intercon](instruction){};
+        \draw[very thick] (instruction.center) -- (instruction |- cu.blpin 1);
+        \draw[very thick] (instruction.center) -- (instruction |- ig.blpin 1);
+        % to cu
+        \draw (cu.blpin 1) -- (cu.blpin 1 -| instruction);
+        \draw (cu.blpin 2) -- (cu.blpin 2 -| instruction);
+        \draw (cu.blpin 3) -- (cu.blpin 3 -| instruction);
+        % to rf
+        \draw (rf.blpin 1) -- (rf.blpin 1 -| instruction);
+        \draw (rf.blpin 2) -- (rf.blpin 2 -| instruction);
+        \draw (rf.blpin 3) -- (rf.blpin 3 -| instruction);
+        % to ig
+        \draw[very thick] (ig.blpin 1) -- (ig.blpin 1 -| instruction);
+        \draw[very thick] (igjb.blpin 1) -- (igjb.blpin 1 -| instruction);
+    \end{scope}
+
+    % memory
+    \begin{scope}[name=memory]
+        \node[memory, right=5cm of alu](mem){Data\\Memory};
+        \foreach \rawpin/\label in {1/address, 4/input} {
+            \draw (mem.blpin \rawpin) node[right, font=\tiny]{\label};
+        }
+        \foreach \rawpin/\label in {1/output} { %, 2/ready} {
+            \draw (mem.brpin \rawpin) node[left, font=\tiny]{\label};
+        }
+        \draw (mem.blpin 5) ++(0,0.1) -- ++(0.1,-0.1) node[right, font=\tiny]{clk} -- ++(-0.1,-0.1);
+        \draw (alu.rpin 1)-- ++(0.5,0) coordinate[intercon](alu out con) |- coordinate[intercon](alu out con 2) (mem.blpin 1);
+        \draw (rs2 con) -| ($(alu.south west) + (-1,-0.8)$) 
+            -- ($(alu.south east) + (1.25,-0.8)$) |- (mem.blpin 4);
+        \draw (mem.bbpin 1) -- ++(0,-0.4) node[below, font=\tiny]{$C_{wr}$};
+    \end{scope}
+
+    % write back mux
+    \begin{scope}[name=write back]
+        \node[mux, below right= 1cm and 4cm of mem](wb mux){};
+        \draw (mem.brpin 1) -- ++(1.5,0) |- (wb mux.lpin 1);
+        \draw (alu out con) |- (wb mux.lpin 2);
+        \draw (u con) |- (wb mux.lpin 3);
+        \draw (wb mux.lpin 4) -- (wb mux.lpin 4 -| pc 4 con) -| (pc 4 con) node[intercon]{};
+        \draw (wb mux.rpin 1) -| ++(0.4,-2) -| 
+            ($(rf.blpin 4) + (-1,0)$) -- (rf.blpin 4);
+        \draw (wb mux.bbpin 1) |- ++(-0.4,-0.6) node[left, font=\tiny]{$C_{wb}$};
+    \end{scope}
+
+    % address mux
+    \begin{scope}[name=address mux]
+        \draw (adder branch.brpin 1) -- (adder branch.brpin 1 -| alu.rpin 1)  
+            node[demux, muxdemux def={NR=1, NL=2, NT=0, NB=1, Lh=2.5, Rh=1}, anchor=lpin 1](addr mux){}; 
+        \draw (alu out con 2) -- ++(-1,0) |- coordinate[intercon](alu out con 3) (addr mux.lpin 2);
+        \draw (addr mux.rpin 1) -- ++(3.5,0) |- ($(cu.north east) + (0,1)$) -| (mux pc.lpin 1);
+        \draw (addr mux.bbpin 1) -- ++(0,-0.4) node[below, font=\tiny]{$C_{pc}$};
+
+        \draw (alu out con 3) -- ++(0,1.5) node[xor port, scale=0.75, anchor = in 2](xor branch){};
+        \draw (xor branch.out) -- ++(0,0.5) node[or port, scale=0.75, anchor = in 2](or branch){};
+        \draw (xor branch.in 1) -- ++(-0.4,0) node[left, font=\tiny]{$C_{neg}$};
+        \draw (or branch.in 1) -- ++(-0.4,0) node[left, font=\tiny]{$C_{jump}$};
+        \draw (or branch.out) -- ++(2,0) |- ($(cu.north east) + (0,0.5)$) -| (mux pc.tpin 1);
+    \end{scope}
+
+    % clk interconnect
+    \begin{scope}[name=clk]
+        \draw (-23.5,-7) node[left](clk){$clk$} -- (14.5,-7);
+        \draw (pc.blpin 3) -- ++(-0.4,0) node[](pc_aux_con){} |- (pc_aux_con |- clk) node[intercon]{};
+        \draw (im.blpin 5) -- ++(-0.4,0) node[](aux){} |- (aux |- clk) node[intercon]{};
+        \draw (rf.blpin 5) -- ++(-0.4,0) node[](aux){} |- (aux |- clk) node[intercon]{};
+        \draw (mem.blpin 5) -- ++(-0.4,0) node[](aux){} |- (aux |- clk) node[intercon]{};
+    \end{scope}
+
+    \begin{scope}
+        \foreach \x in {-17.7,-10.7,...,14} {
+            \draw[dashed] (\x,9) -- (\x,-8);
+        }
+    \end{scope}
+
+\end{circuitikz}
+
+\end{document}
